@@ -18,11 +18,17 @@ public sealed class DomainExceptionHandler(IProblemDetailsService problemDetails
             NotFoundException e => (StatusCodes.Status404NotFound, "Não encontrado", e.Message),
             ConflictException e => (StatusCodes.Status409Conflict, "Conflito", e.Message),
             InvalidCredentialsException e => (StatusCodes.Status401Unauthorized, "Não autorizado", e.Message),
+            BadHttpRequestException e => (e.StatusCode, e.StatusCode == StatusCodes.Status413PayloadTooLarge
+                ? "Arquivo muito grande" : "Requisição inválida",
+                e.StatusCode == StatusCodes.Status413PayloadTooLarge
+                    ? "A foto deve ter no máximo 5 MB." : "Requisição inválida."),
             _ => (StatusCodes.Status500InternalServerError, "Erro interno", GenericDetail),
         };
 
         if (status == StatusCodes.Status500InternalServerError)
             logger.LogError(exception, "Unhandled exception");
+        else if (exception is BadHttpRequestException)
+            logger.LogWarning(exception, "Bad HTTP request ({Status})", status);
 
         httpContext.Response.StatusCode = status;
         return await problemDetails.TryWriteAsync(new ProblemDetailsContext
