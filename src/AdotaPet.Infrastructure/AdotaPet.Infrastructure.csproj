@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\AdotaPet.Application\AdotaPet.Application.csproj" />
+  </ItemGroup>
+</Project>
