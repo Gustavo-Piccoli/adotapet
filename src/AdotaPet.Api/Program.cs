@@ -7,6 +7,7 @@ using AdotaPet.Application.Accounts;
 using AdotaPet.Infrastructure;
 using AdotaPet.Infrastructure.Identity;
 using AdotaPet.Infrastructure.Persistence;
+using AdotaPet.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -65,6 +66,7 @@ if (app.Environment.IsDevelopment())
     // Migrations run only in Development; the Testing environment (integration tests) migrates itself.
     await using var scope = app.Services.CreateAsyncScope();
     await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+    await DevelopmentSeeder.SeedAsync(scope.ServiceProvider, CancellationToken.None);
 }
 
 app.UseAuthentication();
