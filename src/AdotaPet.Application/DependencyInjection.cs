@@ -1,3 +1,4 @@
+using AdotaPet.Application.AdoptionRequests.UseCases;
 using AdotaPet.Application.Pets.UseCases;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +16,11 @@ public static class DependencyInjection
         services.AddScoped<IUpdatePetUseCase, UpdatePetUseCase>();
         services.AddScoped<IUploadPetPhotoUseCase, UploadPetPhotoUseCase>();
         services.AddScoped<IGetPetPhotoUseCase, GetPetPhotoUseCase>();
+        services.AddScoped<ICreateAdoptionRequestUseCase, CreateAdoptionRequestUseCase>();
+        services.AddScoped<IListAdopterRequestsUseCase, ListAdopterRequestsUseCase>();
+        services.AddScoped<IListShelterRequestsUseCase, ListShelterRequestsUseCase>();
+        services.AddScoped<IApproveAdoptionRequestUseCase, ApproveAdoptionRequestUseCase>();
+        services.AddScoped<IRejectAdoptionRequestUseCase, RejectAdoptionRequestUseCase>();
         return services;
     }
 }
