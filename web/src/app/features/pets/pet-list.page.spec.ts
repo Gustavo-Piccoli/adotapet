@@ -103,4 +103,26 @@ describe('PetListPage', () => {
     expect(req.params.get('page')).toBe('2');
     expect(req.params.get('state')).toBe('RS');
   });
+
+  it('reflects deep-linked filters in the selects', async () => {
+    await harness.navigateByUrl('/?species=Dog&state=RS&ageGroup=Puppy');
+    flushList(paged([pet()]));
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+
+    const el: HTMLElement = harness.routeNativeElement!;
+    expect(el.querySelector<HTMLSelectElement>('#f-species')!.value).toBe('Dog');
+    expect(el.querySelector<HTMLSelectElement>('#f-state')!.value).toBe('RS');
+    expect(el.querySelector<HTMLSelectElement>('#f-age')!.value).toBe('Puppy');
+    expect(el.querySelector<HTMLSelectElement>('#f-size')!.value).toBe('');
+  });
+
+  it('redirects to the last valid page when the page is out of range', async () => {
+    await harness.navigateByUrl('/?page=99');
+    flushList(paged([], 99, 30));
+    await harness.fixture.whenStable();
+
+    const req = flushList(paged([pet()], 3, 30));
+    expect(req.params.get('page')).toBe('3');
+  });
 });

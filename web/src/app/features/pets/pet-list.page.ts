@@ -130,10 +130,25 @@ export class PetListPage {
           }),
         ),
       ),
-      tap(() => this.loading.set(false)),
+      tap((r) => {
+        this.loading.set(false);
+        this.redirectIfPastLastPage(r);
+      }),
     ),
     { initialValue: null },
   );
+
+  private redirectIfPastLastPage(r: PagedResult<PetSummary> | null): void {
+    if (r && r.items.length === 0 && r.totalCount > 0 && this.page() > 1) {
+      const lastPage = Math.ceil(r.totalCount / PAGE_SIZE);
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { page: lastPage === 1 ? null : lastPage },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
+  }
 
   protected onFiltersChange(next: PetFilterValues): void {
     void this.router.navigate([], {

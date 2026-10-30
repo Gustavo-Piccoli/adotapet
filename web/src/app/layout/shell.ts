@@ -10,17 +10,23 @@ import { Header } from './header';
   template: `
     <a
       href="#conteudo"
+      (click)="skipToContent($event, main)"
       class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:p-2"
     >
       Pular para o conteúdo
     </a>
     <div class="flex min-h-screen flex-col">
       <app-header />
-      <main id="conteudo" class="flex-1">
+      <main #main id="conteudo" tabindex="-1" class="flex-1">
         <router-outlet />
       </main>
       <app-footer />
     </div>
   `,
 })
-export class Shell {}
+export class Shell {
+  protected skipToContent(event: Event, main: HTMLElement): void {
+    event.preventDefault();
+    main.focus();
+  }
+}

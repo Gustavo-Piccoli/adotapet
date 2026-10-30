@@ -24,46 +24,46 @@ export type PetFilterValues = Pick<
     >
       <div>
         <label class="field-label" for="f-species">Espécie</label>
-        <select id="f-species" class="field-input" [value]="value().species ?? ''" (change)="set('species', $event)">
-          <option value="">Todas</option>
+        <select id="f-species" class="field-input" (change)="set('species', $event)">
+          <option value="" [selected]="!value().species">Todas</option>
           @for (o of species; track o[0]) {
-            <option [value]="o[0]">{{ o[1] }}</option>
+            <option [value]="o[0]" [selected]="value().species === o[0]">{{ o[1] }}</option>
           }
         </select>
       </div>
       <div>
         <label class="field-label" for="f-size">Porte</label>
-        <select id="f-size" class="field-input" [value]="value().size ?? ''" (change)="set('size', $event)">
-          <option value="">Todos</option>
+        <select id="f-size" class="field-input" (change)="set('size', $event)">
+          <option value="" [selected]="!value().size">Todos</option>
           @for (o of sizes; track o[0]) {
-            <option [value]="o[0]">{{ o[1] }}</option>
+            <option [value]="o[0]" [selected]="value().size === o[0]">{{ o[1] }}</option>
           }
         </select>
       </div>
       <div>
         <label class="field-label" for="f-sex">Sexo</label>
-        <select id="f-sex" class="field-input" [value]="value().sex ?? ''" (change)="set('sex', $event)">
-          <option value="">Todos</option>
+        <select id="f-sex" class="field-input" (change)="set('sex', $event)">
+          <option value="" [selected]="!value().sex">Todos</option>
           @for (o of sexes; track o[0]) {
-            <option [value]="o[0]">{{ o[1] }}</option>
+            <option [value]="o[0]" [selected]="value().sex === o[0]">{{ o[1] }}</option>
           }
         </select>
       </div>
       <div>
         <label class="field-label" for="f-age">Idade</label>
-        <select id="f-age" class="field-input" [value]="value().ageGroup ?? ''" (change)="set('ageGroup', $event)">
-          <option value="">Todas</option>
+        <select id="f-age" class="field-input" (change)="set('ageGroup', $event)">
+          <option value="" [selected]="!value().ageGroup">Todas</option>
           @for (o of ages; track o[0]) {
-            <option [value]="o[0]">{{ o[1] }}</option>
+            <option [value]="o[0]" [selected]="value().ageGroup === o[0]">{{ o[1] }}</option>
           }
         </select>
       </div>
       <div>
         <label class="field-label" for="f-state">UF</label>
-        <select id="f-state" class="field-input" [value]="value().state ?? ''" (change)="set('state', $event)">
-          <option value="">Todas</option>
+        <select id="f-state" class="field-input" (change)="set('state', $event)">
+          <option value="" [selected]="!value().state">Todas</option>
           @for (uf of ufs; track uf) {
-            <option [value]="uf">{{ uf }}</option>
+            <option [value]="uf" [selected]="value().state === uf">{{ uf }}</option>
           }
         </select>
       </div>
