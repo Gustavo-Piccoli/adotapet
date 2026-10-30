@@ -11,7 +11,7 @@ public sealed class LocalPhotoStorage : IPhotoStorage
 
     public LocalPhotoStorage(IOptions<PhotoStorageOptions> options)
     {
-        _root = Path.GetFullPath(options.Value.RootPath);
+        _root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(options.Value.RootPath));
     }
 
     public async Task<string> SaveAsync(Stream content, string extension, CancellationToken ct)
@@ -49,7 +49,9 @@ public sealed class LocalPhotoStorage : IPhotoStorage
     {
         if (string.IsNullOrWhiteSpace(fileName)
             || fileName.Contains("..", StringComparison.Ordinal)
-            || fileName.IndexOfAny(Separators) >= 0)
+            || fileName.IndexOfAny(Separators) >= 0
+            || fileName.Contains(':')
+            || fileName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
             return null;
 
         var full = Path.GetFullPath(Path.Combine(_root, fileName));

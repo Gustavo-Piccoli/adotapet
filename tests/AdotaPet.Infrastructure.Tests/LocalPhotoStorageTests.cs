@@ -43,6 +43,32 @@ public sealed class LocalPhotoStorageTests : IDisposable
     }
 
     [Fact]
+    public async Task Save_ThenOpen_WithTrailingSeparatorInRoot_ReturnsSameBytes()
+    {
+        var storage = new LocalPhotoStorage(Options.Create(
+            new PhotoStorageOptions { RootPath = _root + Path.DirectorySeparatorChar }));
+        byte[] bytes = [7, 8, 9];
+
+        var name = await storage.SaveAsync(new MemoryStream(bytes), ".webp", CancellationToken.None);
+
+        var ms = new MemoryStream();
+        await using (var stream = await storage.OpenReadAsync(name, CancellationToken.None))
+        {
+            Assert.NotNull(stream);
+            await stream!.CopyToAsync(ms);
+        }
+        Assert.Equal(bytes, ms.ToArray());
+        await storage.DeleteAsync(name, CancellationToken.None);
+        Assert.Null(await storage.OpenReadAsync(name, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task OpenRead_WithColon_ReturnsNull()
+    {
+        Assert.Null(await _storage.OpenReadAsync("c:x.jpg", CancellationToken.None));
+    }
+
+    [Fact]
     public async Task OpenRead_MissingFile_ReturnsNull()
     {
         Assert.Null(await _storage.OpenReadAsync("missing.jpg", CancellationToken.None));
