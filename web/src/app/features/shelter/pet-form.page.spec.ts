@@ -123,6 +123,62 @@ describe('PetFormPage', () => {
     expect(TestBed.inject(ToastService).toasts()[0].message).toContain('Arquivo inválido.');
   });
 
+  const EXISTING = {
+    id: 'p9', name: 'Mel', species: 'Cat', sex: 'Female', size: 'Large', ageGroup: 'Senior',
+    isNeutered: true, isVaccinated: true, description: 'Calma', photoUrl: '/photos/mel.jpg',
+    status: 'Available', createdAt: '2026-01-01T00:00:00Z',
+  };
+
+  const value = (selector: string) => el.querySelector<HTMLInputElement>(selector)!.value;
+  const checked = (label: string) =>
+    Array.from(el.querySelectorAll('label'))
+      .find((l) => l.textContent?.includes(label))!
+      .querySelector('input')!.checked;
+
+  it('populates the form in edit mode', async () => {
+    await open('/ong/pets/p9/editar');
+    http.expectOne('/api/shelter/pets/p9').flush(EXISTING);
+    harness.detectChanges();
+    expect(value('#p-name')).toBe('Mel');
+    expect(value('#p-species')).toBe('Cat');
+    expect(value('#p-sex')).toBe('Female');
+    expect(value('#p-size')).toBe('Large');
+    expect(value('#p-age')).toBe('Senior');
+    expect(value('#p-description')).toBe('Calma');
+    expect(checked('Castrado')).toBe(true);
+    expect(checked('Vacinado')).toBe(true);
+    expect(el.querySelector('img')?.getAttribute('src')).toBe('/photos/mel.jpg');
+  });
+
+  it('edit save PUTs the pet, then the photo when one was picked', async () => {
+    await open('/ong/pets/p9/editar');
+    http.expectOne('/api/shelter/pets/p9').flush(EXISTING);
+    harness.detectChanges();
+    pickFile(new File(['abc'], 'a.webp', { type: 'image/webp' }));
+    submit();
+    const put = http.expectOne((r) => r.method === 'PUT' && r.url === '/api/shelter/pets/p9');
+    expect(put.request.body.name).toBe('Mel');
+    put.flush(null);
+    http.expectOne('/api/shelter/pets/p9/photo').flush(null);
+    await harness.fixture.whenStable();
+    expect(TestBed.inject(Router).url).toBe('/ong/pets');
+  });
+
+  it('ignores a second submit while saving', async () => {
+    await open('/ong/pets/novo');
+    fillValid();
+    submit();
+    submit();
+    http.expectOne('/api/shelter/pets').flush({ id: 'p1' }, { status: 201, statusText: 'Created' });
+  });
+
+  it('revokes the preview URL when the photo changes', async () => {
+    await open('/ong/pets/novo');
+    pickFile(new File(['abc'], 'a.png', { type: 'image/png' }));
+    pickFile(new File(['abd'], 'b.png', { type: 'image/png' }));
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:preview');
+  });
+
   it('shows a friendly not-found state when editing an unknown pet', async () => {
     await open('/ong/pets/zzz/editar');
     http

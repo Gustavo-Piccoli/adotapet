@@ -185,6 +185,7 @@ export class ShelterRequestsPage {
   }
 
   private decide(call: Observable<void>, successMessage: string): void {
+    if (this.busy()) return;
     this.busy.set(true);
     call.subscribe({
       next: () => {
