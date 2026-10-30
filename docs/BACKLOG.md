@@ -1,0 +1,68 @@
+# Backlog
+
+Single source of truth for pending work. Keep it updated here (see `CLAUDE.md`).
+
+## Pending verification
+
+Written and compiled, but not yet run because Docker is not installed on the development machine.
+
+- [ ] Run the API integration tests (`dotnet test tests/AdotaPet.Api.IntegrationTests`, 12 tests, need Docker/Testcontainers).
+- [ ] Run `docker compose config` and `docker compose up --build` on a clean machine; confirm the site at `http://localhost:4200` and Scalar at `http://localhost:5080/scalar`.
+- [ ] Manual end-to-end check of all flows: visitor, adopter (request, duplicate request, my requests) and shelter (create/edit pet, photo upload, approve, reject).
+- [ ] Confirm the 413 "A foto deve ter no máximo 5 MB." path on real Kestrel/nginx. The integration tests use TestServer, which does not enforce `RequestSizeLimit`, so they only cover the 400 path.
+- [ ] Capture screenshots into `docs/images/` (`vitrine.png`, `pet.png`, `ong-pets.png`, `ong-pedidos.png`) referenced by the README.
+- [ ] Create the GitHub repository and push, only after Gustavo confirms. Then confirm CI is green.
+
+## Technical debts
+
+- Auth token is stored in `localStorage` (move to an httpOnly cookie).
+- No refresh token: the session ends after 60 minutes.
+- Seed photos are generated placeholder illustrations; replace with real, attributed photos and list them in `docs/CREDITS.md`.
+
+### Backend
+- `PetRepository.SearchAvailableAsync` has no page guard of its own (only the use case clamps).
+- `JwtOptions` is not validated on startup.
+- The concurrency conflict message says "pedido" for any concurrency conflict.
+- `IdentityService` has an unused cancellation token.
+- `ProblemDetails` responses have no `Type`; bodiless 401/403 use plain-text status pages.
+- `Guard.Phone` is coupled to `Cnpj.Normalize`.
+- Non-seekable photo streams are buffered without being capped at `MaxBytes + 1`.
+- Duplicated role-to-profile lookup and null-navigation guard in use cases; the seeder duplicates the "reject siblings on approve" rule.
+- Test gaps: enum theory coverage, `Guid.Empty` ids, adopter requests listing, a weak `ThrowsAny` assertion, and the non-image upload test does not assert that nothing was written to disk.
+
+### Frontend
+- Interceptor matches the API URL by substring; a 401 while already on `/entrar` navigates again; the stored session shape is not validated.
+- Server 400 field errors are not mapped to form controls; whitespace-only inputs pass client validators.
+- `returnUrl` is lost between register and login; the default status filter is not written to the URL.
+- Pet details: race/flash in the pending-request check; some subscriptions lack `takeUntilDestroyed`; `blob:` URL sanitization is unverified.
+- Accessibility/UX: placeholder contrast is about 3.5:1; the loading state has no visual cue; the error state has no retry; phone mask caret jumps.
+- Test gaps: no specs for my-requests and shelter-pets, the photo PUT method in the edit-save spec, or the `decide()` busy guard.
+
+### Infra
+- The API Dockerfile has no separate restore layer, so dependencies are re-restored on any source change.
+- An `SA_PASSWORD` containing `;` or `=` breaks the connection string.
+- `web` depends on `api` without a health check.
+- CI has no job timeouts or concurrency control.
+
+## Future features
+
+- Public deploy (Azure App Service + Azure SQL, cloud photo storage).
+- Adopter notifies a shelter about an animal that needs a home.
+- Gallery with several photos per pet.
+- Adopter can cancel a request; favorites.
+- Deactivate/delete a pet; reopen an adopted pet (adoption that did not work out).
+- E-mail notifications (request received, request decided).
+- Refresh token and password recovery; move the token from `localStorage` to an httpOnly cookie.
+- Cities and states from the IBGE API.
+- Shelter dashboard with numbers (requests per month, adoptions).
+- End-to-end tests with Playwright.
+
+## Improvements
+
+- Add a restore layer to the API Dockerfile for faster rebuilds.
+- Add an API healthcheck in compose and make `web` wait for it.
+- Add timeouts and concurrency groups to CI; cache NuGet packages.
+- Show a skeleton/spinner while lists load and a retry button on errors.
+- Validate options on startup (`ValidateOnStart`) and fail fast on a weak JWT key outside Development.
+- Image resizing/thumbnails for pet photos to cut list payloads.
+- Rate limiting on login and registration endpoints.
