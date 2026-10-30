@@ -1,0 +1,192 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { TestBed } from '@angular/core/testing';
+import { Router, provideRouter } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
+import { AdopterRequest, PetDetails } from '../../core/api/api.models';
+import { AuthResult, Role } from '../../core/auth/auth.models';
+import { AuthService } from '../../core/auth/auth.service';
+import { ToastService } from '../../core/toast/toast.service';
+import { PetDetailsPage } from './pet-details.page';
+
+const PET: PetDetails = {
+  id: 'p1',
+  name: 'Rex',
+  species: 'Dog',
+  sex: 'Male',
+  size: 'Medium',
+  ageGroup: 'Adult',
+  isNeutered: true,
+  isVaccinated: false,
+  description: 'Muito dócil.',
+  photoUrl: null,
+  status: 'Available',
+  shelter: {
+    id: 's1',
+    name: 'ONG Patas',
+    city: 'Porto Alegre',
+    state: 'RS',
+    phone: '51999998888',
+    email: 'ong@patas.org',
+    description: '',
+  },
+};
+
+const MESSAGE = 'Tenho quintal e muito amor para dar.';
+
+describe('PetDetailsPage', () => {
+  let http: HttpTestingController;
+  let harness: RouterTestingHarness;
+
+  beforeEach(async () => {
+    localStorage.clear();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([
+          { path: 'pets/:id', component: PetDetailsPage },
+          { path: 'entrar', component: PetDetailsPage },
+        ]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
+    });
+    http = TestBed.inject(HttpTestingController);
+    harness = await RouterTestingHarness.create();
+  });
+
+  afterEach(() => http.verify());
+
+  const login = (role: Role) =>
+    TestBed.inject(AuthService).session.set({
+      accessToken: 't',
+      expiresAt: '2999-01-01T00:00:00Z',
+      role,
+      profileId: 'x',
+      name: 'N',
+      email: 'n@x.com',
+    } satisfies AuthResult);
+
+  const open = async (pet: PetDetails = PET, mine: AdopterRequest[] = []) => {
+    await harness.navigateByUrl('/pets/p1');
+    http.expectOne('/api/pets/p1').flush(pet);
+    if (TestBed.inject(AuthService).isAdopter()) {
+      http.expectOne('/api/adopter/adoption-requests').flush(mine);
+    }
+    harness.detectChanges();
+    return harness.routeNativeElement as HTMLElement;
+  };
+
+  const button = (el: HTMLElement, text: string) =>
+    Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim() === text);
+
+  const fillAndSend = (el: HTMLElement) => {
+    const textarea = el.querySelector<HTMLTextAreaElement>('#req-message')!;
+    textarea.value = MESSAGE;
+    textarea.dispatchEvent(new Event('input'));
+    el.querySelector('form')!.dispatchEvent(new Event('submit'));
+  };
+
+  it('renders details, badges and the shelter card', async () => {
+    const el = await open();
+    expect(el.textContent).toContain('Rex');
+    expect(el.textContent).toContain('Castrado');
+    expect(el.textContent).toContain('Não vacinado');
+    expect(el.textContent).toContain('Muito dócil.');
+    expect(el.textContent).toContain('ONG Patas');
+    expect(el.textContent).toContain('Porto Alegre/RS');
+    expect(el.textContent).toContain('ong@patas.org');
+    expect(el.querySelector('[data-testid="photo-placeholder"]')).not.toBeNull();
+  });
+
+  it('sends a visitor to login with the returnUrl', async () => {
+    const el = await open();
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate');
+    button(el, 'Quero adotar')!.click();
+    expect(navigate).toHaveBeenCalledWith(['/entrar'], {
+      queryParams: { returnUrl: '/pets/p1' },
+    });
+  });
+
+  it('hides the adopt button for shelters', async () => {
+    login('Shelter');
+    const el = await open();
+    expect(button(el, 'Quero adotar')).toBeUndefined();
+  });
+
+  it('shows the Adopted badge and no button for adopted pets', async () => {
+    login('Adopter');
+    const el = await open({ ...PET, status: 'Adopted' });
+    expect(el.querySelector('[data-testid="adopted-badge"]')?.textContent).toContain('Adotado');
+    expect(button(el, 'Quero adotar')).toBeUndefined();
+  });
+
+  it('shows "Pedido em análise" when a pending request already exists', async () => {
+    login('Adopter');
+    const el = await open(PET, [
+      { petId: 'p1', status: 'Pending' } as AdopterRequest,
+    ]);
+    expect(el.querySelector('[data-testid="pending-badge"]')?.textContent).toContain(
+      'Pedido em análise',
+    );
+    expect(button(el, 'Quero adotar')).toBeUndefined();
+  });
+
+  it('validates the message length before posting', async () => {
+    login('Adopter');
+    const el = await open();
+    button(el, 'Quero adotar')!.click();
+    harness.detectChanges();
+    const textarea = el.querySelector<HTMLTextAreaElement>('#req-message')!;
+    textarea.value = 'curta';
+    textarea.dispatchEvent(new Event('input'));
+    el.querySelector('form')!.dispatchEvent(new Event('submit'));
+    harness.detectChanges();
+    expect(el.textContent).toContain('no mínimo 10');
+    http.expectNone('/api/pets/p1/adoption-requests');
+  });
+
+  it('posts the request and confirms with a toast', async () => {
+    login('Adopter');
+    const el = await open();
+    button(el, 'Quero adotar')!.click();
+    harness.detectChanges();
+    fillAndSend(el);
+
+    const req = http.expectOne('/api/pets/p1/adoption-requests');
+    expect(req.request.body).toEqual({ message: MESSAGE });
+    req.flush({ id: 'r1' }, { status: 201, statusText: 'Created' });
+    harness.detectChanges();
+
+    expect(TestBed.inject(ToastService).toasts()[0].message).toBe(
+      'Pedido enviado! A ONG vai analisar.',
+    );
+    expect(el.querySelector('[data-testid="pending-badge"]')).not.toBeNull();
+  });
+
+  it('shows "Pedido em análise" on a 409 instead of an error', async () => {
+    login('Adopter');
+    const el = await open();
+    button(el, 'Quero adotar')!.click();
+    harness.detectChanges();
+    fillAndSend(el);
+
+    http
+      .expectOne('/api/pets/p1/adoption-requests')
+      .flush({ detail: 'Você já tem um pedido.' }, { status: 409, statusText: 'Conflict' });
+    harness.detectChanges();
+
+    expect(el.querySelector('[data-testid="pending-badge"]')?.textContent).toContain(
+      'Pedido em análise',
+    );
+    expect(TestBed.inject(ToastService).toasts()).toHaveLength(0);
+  });
+
+  it('shows a not-found message on 404', async () => {
+    await harness.navigateByUrl('/pets/p1');
+    http.expectOne('/api/pets/p1').flush({}, { status: 404, statusText: 'Not Found' });
+    harness.detectChanges();
+    expect((harness.routeNativeElement as HTMLElement).textContent).toContain(
+      'Pet não encontrado.',
+    );
+  });
+});
