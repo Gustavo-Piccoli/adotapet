@@ -39,4 +39,11 @@ internal static class Guard
             throw new DomainValidationException("Usuário inválido.");
         return value;
     }
+
+    public static T Defined<T>(T value, string label) where T : struct, Enum
+    {
+        if (!Enum.IsDefined(value))
+            throw new DomainValidationException($"{label} inválido.");
+        return value;
+    }
 }
