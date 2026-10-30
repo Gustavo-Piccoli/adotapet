@@ -30,12 +30,16 @@ public sealed class AdoptionFlowTests(ApiFactory factory)
     [Fact]
     public async Task Approving_a_request_adopts_the_pet_and_rejects_the_other_pending_requests()
     {
-        var shelter = await TestAuth.RegisterShelterAsync(factory);
+        var city = TestAuth.UniqueCity();
+        var shelter = await TestAuth.RegisterShelterAsync(factory, city);
         var adopterA = await TestAuth.RegisterAdopterAsync(factory);
         var adopterB = await TestAuth.RegisterAdopterAsync(factory);
         var petId = await TestAuth.CreatePetAsync(shelter);
         var requestA = await TestAuth.RequestAdoptionAsync(adopterA, petId);
         var requestB = await TestAuth.RequestAdoptionAsync(adopterB, petId);
+        var searchUrl = $"/api/pets?state=RS&city={city}&pageSize=48";
+        var before = await shelter.GetFromJsonAsync<PagedResult<PetSummaryDto>>(searchUrl, TestAuth.Json);
+        Assert.Contains(before!.Items, p => p.Id == petId);
 
         var approve = await shelter.PostAsync($"/api/shelter/adoption-requests/{requestA}/approve", null);
 
@@ -48,7 +52,7 @@ public sealed class AdoptionFlowTests(ApiFactory factory)
             "/api/adopter/adoption-requests", TestAuth.Json);
         Assert.Equal(AdoptionRequestStatus.Rejected, requestsOfB!.Single(r => r.Id == requestB).Status);
 
-        var listed = await shelter.GetFromJsonAsync<PagedResult<PetSummaryDto>>("/api/pets?pageSize=48", TestAuth.Json);
+        var listed = await shelter.GetFromJsonAsync<PagedResult<PetSummaryDto>>(searchUrl, TestAuth.Json);
         Assert.DoesNotContain(listed!.Items, p => p.Id == petId);
     }
 

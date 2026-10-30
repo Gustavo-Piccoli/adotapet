@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using AdotaPet.Application.Pets.Dtos;
 using AdotaPet.Domain.Common;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AdotaPet.Api.IntegrationTests;
 
@@ -32,13 +33,14 @@ public sealed class PetsTests(ApiFactory factory)
     [Fact]
     public async Task Shelter_creates_pet_and_uploads_photo_then_pet_is_listed_with_photo_url()
     {
-        var shelter = await TestAuth.RegisterShelterAsync(factory);
+        var city = TestAuth.UniqueCity();
+        var shelter = await TestAuth.RegisterShelterAsync(factory, city);
         var petId = await TestAuth.CreatePetAsync(shelter, "Mel");
 
         var upload = await shelter.PutAsync($"/api/shelter/pets/{petId}/photo", FileContent(Png, "mel.png", "image/png"));
         Assert.Equal(HttpStatusCode.NoContent, upload.StatusCode);
 
-        var list = await shelter.GetFromJsonAsync<PagedResult<PetSummaryDto>>("/api/pets?pageSize=48", TestAuth.Json);
+        var list = await shelter.GetFromJsonAsync<PagedResult<PetSummaryDto>>($"/api/pets?state=RS&city={city}&pageSize=48", TestAuth.Json);
         var pet = Assert.Single(list!.Items, p => p.Id == petId);
         Assert.False(string.IsNullOrEmpty(pet.PhotoUrl));
     }
@@ -66,7 +68,8 @@ public sealed class PetsTests(ApiFactory factory)
         var response = await shelter.PutAsync($"/api/shelter/pets/{petId}/photo", FileContent(bytes, "big.png", "image/png"));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains(SizeMessage, await response.Content.ReadAsStringAsync());
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal(SizeMessage, problem!.Detail);
     }
 
     [Fact]
@@ -82,7 +85,8 @@ public sealed class PetsTests(ApiFactory factory)
         var response = await shelter.PutAsync($"/api/shelter/pets/{petId}/photo", FileContent(bytes, "huge.png", "image/png"));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains(SizeMessage, await response.Content.ReadAsStringAsync());
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal(SizeMessage, problem!.Detail);
     }
 
     [Fact]

@@ -39,14 +39,17 @@ public static class TestAuth
         return remainder < 2 ? 0 : 11 - remainder;
     }
 
-    public static RegisterShelterDto NewShelter(string? email = null) =>
-        new(email ?? UniqueEmail("ong"), Password, "ONG Patinhas", UniqueCnpj(), "Porto Alegre", "RS",
+    public static RegisterShelterDto NewShelter(string? email = null, string city = "Porto Alegre") =>
+        new(email ?? UniqueEmail("ong"), Password, "ONG Patinhas", UniqueCnpj(), city, "RS",
             "(51) 99999-0000", "Abrigo de testes");
 
-    public static async Task<HttpClient> RegisterShelterAsync(ApiFactory factory)
+    /// <summary>A city name no other test uses, so searches filtered by it only see this test's pets.</summary>
+    public static string UniqueCity() => "Cidade" + Guid.NewGuid().ToString("N")[..12];
+
+    public static async Task<HttpClient> RegisterShelterAsync(ApiFactory factory, string city = "Porto Alegre")
     {
         var client = factory.CreateClient();
-        var response = await client.PostAsJsonAsync("/api/auth/register/shelter", NewShelter(), Json);
+        var response = await client.PostAsJsonAsync("/api/auth/register/shelter", NewShelter(city: city), Json);
         return await AuthenticateAsync(client, response);
     }
 
