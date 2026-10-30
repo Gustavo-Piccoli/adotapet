@@ -1,1 +1,114 @@
 @import "tailwindcss";
+
+/*
+ * AdotaPet design tokens.
+ * Warm cream paper, terracotta (clay) as the action colour, deep pine green
+ * for trust/contrast, and a honey accent for highlights.
+ */
+@theme {
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+
+  --color-cream-50: #fffbf4;
+  --color-cream-100: #fbf5ea;
+  --color-cream-200: #f3e8d4;
+  --color-cream-300: #e6d5b8;
+
+  --color-clay-50: #fdf1ec;
+  --color-clay-100: #f9dcd0;
+  --color-clay-500: #d9603b;
+  --color-clay-600: #b94a28;
+  --color-clay-700: #963a1e;
+
+  --color-pine-50: #eaf2ee;
+  --color-pine-100: #cfe2d9;
+  --color-pine-600: #2f6b55;
+  --color-pine-700: #1f5440;
+  --color-pine-900: #14332a;
+
+  --color-honey-100: #fbebc2;
+  --color-honey-500: #e8a317;
+
+  --color-ink: #2b2118;
+  --color-ink-soft: #5f5042;
+
+  --radius-card: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(74 48 24 / 0.06), 0 8px 24px -12px rgb(74 48 24 / 0.25);
+  --shadow-card-hover: 0 2px 4px rgb(74 48 24 / 0.08), 0 16px 32px -14px rgb(74 48 24 / 0.35);
+}
+
+@layer base {
+  html {
+    background: var(--color-cream-100);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-honey-500);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}
+
+/* Reusable building blocks (Tasks 13 and 14 reuse these class names). */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-clay-600 text-white shadow-sm hover:bg-clay-700 active:translate-y-px;
+  }
+  .btn-secondary {
+    @apply border border-pine-700 bg-transparent text-pine-700 hover:bg-pine-50;
+  }
+  .btn-ghost {
+    @apply text-ink-soft hover:bg-cream-200;
+  }
+  .btn-danger {
+    @apply bg-red-700 text-white hover:bg-red-800;
+  }
+
+  .field-label {
+    @apply mb-1 block text-sm font-semibold text-ink;
+  }
+  .field-input {
+    @apply w-full rounded-xl border border-cream-300 bg-cream-50 px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft/70 hover:border-pine-600 focus:border-pine-600;
+  }
+  .field-error {
+    @apply mt-1 text-sm text-red-700;
+  }
+
+  .card {
+    @apply overflow-hidden rounded-card bg-cream-50 shadow-card;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-full bg-pine-50 px-2.5 py-0.5 text-xs font-semibold text-pine-700;
+  }
+  .chip-clay {
+    @apply bg-clay-50 text-clay-700;
+  }
+  .chip-honey {
+    @apply bg-honey-100 text-ink;
+  }
+
+  .empty-state {
+    @apply rounded-card border-2 border-dashed border-cream-300 bg-cream-50 px-6 py-14 text-center text-ink-soft;
+  }
+
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6;
+  }
+}

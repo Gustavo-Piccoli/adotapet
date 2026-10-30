@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Shell } from './layout/shell';
 import { ToastContainer } from './core/toast/toast-container';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ToastContainer],
+  imports: [Shell, ToastContainer],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
