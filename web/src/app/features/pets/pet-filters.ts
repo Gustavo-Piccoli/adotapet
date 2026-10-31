@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { SearchPetsParams } from '../../core/api/api.models';
 import {
   AGE_GROUP_LABELS,
@@ -17,8 +17,21 @@ export type PetFilterValues = Pick<
   selector: 'app-pet-filters',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <button
+      type="button"
+      class="btn btn-ghost w-full justify-between border border-clay-100 bg-white sm:hidden"
+      data-testid="filters-toggle"
+      aria-controls="pet-filters-form"
+      [attr.aria-expanded]="open()"
+      (click)="open.set(!open())"
+    >
+      <span>Filtros{{ activeCount() ? ' (' + activeCount() + ')' : '' }}</span>
+      <span aria-hidden="true">{{ open() ? '▲' : '▼' }}</span>
+    </button>
     <form
-      class="card grid gap-4 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-6"
+      id="pet-filters-form"
+      class="card mt-2 grid grid-cols-2 gap-3 p-4 sm:mt-0 sm:grid-cols-2 sm:gap-4 sm:p-5 lg:grid-cols-6"
+      [class.max-sm:hidden]="!open()"
       aria-label="Filtrar pets"
       (submit)="$event.preventDefault()"
     >
@@ -67,7 +80,7 @@ export type PetFilterValues = Pick<
           }
         </select>
       </div>
-      <div>
+      <div class="col-span-2 sm:col-span-1">
         <label class="field-label" for="f-city">Cidade</label>
         <input
           id="f-city"
@@ -90,6 +103,11 @@ export class PetFilters {
   protected readonly sexes = Object.entries(SEX_LABELS);
   protected readonly ages = Object.entries(AGE_GROUP_LABELS);
   protected readonly ufs = UFS;
+
+  protected readonly open = signal(false);
+  protected readonly activeCount = computed(
+    () => Object.values(this.value()).filter((v) => v !== undefined && v !== '').length,
+  );
 
   protected set(key: keyof PetFilterValues, event: Event): void {
     const raw = (event.target as HTMLInputElement | HTMLSelectElement).value.trim();
