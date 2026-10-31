@@ -40,11 +40,13 @@ public sealed class ShelterPetsController : ControllerBase
 
     [HttpPut("{id:guid}/photo")]
     [RequestSizeLimit(6 * 1024 * 1024)]
+    [DisableFormValueModelBinding]
     public async Task<IActionResult> UploadPhoto(
         Guid id, [FromServices] IUploadPetPhotoUseCase useCase, CancellationToken ct)
     {
-        // The form is read by hand instead of binding an IFormFile: MVC's form value provider swallows the
-        // BadHttpRequestException Kestrel throws when the body exceeds the size limit and answers an English 400.
+        // The form is read by hand instead of binding an IFormFile, and [DisableFormValueModelBinding] keeps MVC's
+        // form value providers from reading it earlier: they swallow the BadHttpRequestException Kestrel throws
+        // when the body exceeds the size limit and [ApiController] answers an English 400 before the action runs.
         // Read here, it reaches DomainExceptionHandler, which answers 413 with a pt-BR message.
         if (!Request.HasFormContentType)
             throw new DomainValidationException("Envie uma imagem no campo 'file'.");
