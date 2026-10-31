@@ -248,6 +248,24 @@ describe('PetDetailsPage', () => {
     }
   });
 
+  it('announces the failure states instead of staying silent', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const announcer = TestBed.inject(RouteAnnouncer);
+      await harness.navigateByUrl('/pets/p1');
+      http.expectOne('/api/pets/p1').flush({}, { status: 404, statusText: 'Not Found' });
+      vi.advanceTimersByTime(60);
+      expect(announcer.message()).toBe('Pet não encontrado — AdotaPet');
+
+      await harness.navigateByUrl('/pets/p2');
+      http.expectOne('/api/pets/p2').flush({}, { status: 500, statusText: 'Server Error' });
+      vi.advanceTimersByTime(60);
+      expect(announcer.message()).toBe('Erro ao carregar o pet — AdotaPet');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('shows a not-found message on 404', async () => {
     await harness.navigateByUrl('/pets/p1');
     http.expectOne('/api/pets/p1').flush({}, { status: 404, statusText: 'Not Found' });
