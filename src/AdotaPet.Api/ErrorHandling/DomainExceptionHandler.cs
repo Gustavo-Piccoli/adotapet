@@ -12,6 +12,10 @@ public sealed class DomainExceptionHandler(IProblemDetailsService problemDetails
 
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken ct)
     {
+        // Client went away: nothing to answer and nothing worth logging as an error.
+        if (exception is OperationCanceledException && httpContext.RequestAborted.IsCancellationRequested)
+            return true;
+
         var (status, title, detail) = exception switch
         {
             DomainValidationException e => (StatusCodes.Status400BadRequest, "Requisição inválida", e.Message),

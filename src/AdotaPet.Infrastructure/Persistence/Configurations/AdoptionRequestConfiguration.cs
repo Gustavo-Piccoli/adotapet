@@ -15,6 +15,7 @@ public sealed class AdoptionRequestConfiguration : IEntityTypeConfiguration<Adop
         builder.Property(r => r.Id).ValueGeneratedNever();
         builder.Property(r => r.Message).IsRequired().HasMaxLength(1000);
         builder.Property(r => r.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(r => r.RowVersion).IsRowVersion();
 
         builder.HasOne(r => r.Pet)
             .WithMany()
