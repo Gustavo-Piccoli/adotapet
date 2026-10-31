@@ -4,11 +4,9 @@ Single source of truth for pending work. Keep it updated here (see `CLAUDE.md`).
 
 ## Pending verification
 
-Verified locally on 2026-10-31: all 19 API integration tests (Testcontainers), `docker compose up --build` (healthy in about 25 s), migrations applied to a real SQL Server, API healthcheck, photo uploads on the non-root `photos` volume, the full browser E2E (visitor, adopter, shelter) and the README screenshots.
+Verified locally on 2026-10-31: all 19 API integration tests (Testcontainers), `docker compose up --build` (healthy in about 25 s), migrations applied to a real SQL Server, API healthcheck, photo uploads on the non-root `photos` volume, the full browser E2E (visitor, adopter, shelter) and the README screenshots. CI (backend and frontend jobs) green on GitHub on the first pull request.
 
-- [ ] Confirm CI is green on GitHub after the first push.
 - [ ] (Optional) Run `docker compose up --build` on another clean machine (macOS/Linux).
-- [ ] Create the GitHub repository and push, only after Gustavo confirms.
 
 ## Technical debts
 
