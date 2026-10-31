@@ -95,6 +95,7 @@ describe('PetDetailsPage', () => {
     expect(el.textContent).toContain('ONG Patas');
     expect(el.textContent).toContain('Porto Alegre/RS');
     expect(el.textContent).toContain('ong@patas.org');
+    expect(el.textContent).toContain('(51) 99999-8888');
     expect(el.querySelector('[data-testid="photo-placeholder"]')).not.toBeNull();
   });
 
