@@ -25,8 +25,10 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers()
-    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-builder.Services.AddProblemDetails();
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
+    .ConfigureApiBehaviorOptions(options =>
+        options.InvalidModelStateResponseFactory = ApiErrorMessages.InvalidModelState);
+builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = ApiErrorMessages.LocalizeTitle);
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 builder.Services.AddOpenApi();
 
@@ -47,6 +49,7 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
             NameClaimType = "name",
             ClockSkew = TimeSpan.FromSeconds(30),
         };
+        options.Events = new JwtBearerEvents { OnTokenValidated = ProfileExistenceValidator.ValidateAsync };
     });
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(Policies.Shelter, policy => policy.RequireRole(Roles.Shelter))
