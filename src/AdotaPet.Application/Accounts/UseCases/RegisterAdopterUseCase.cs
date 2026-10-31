@@ -15,16 +15,21 @@ public sealed class RegisterAdopterUseCase(IIdentityService identity, ITokenServ
 {
     public async Task<AuthResultDto> ExecuteAsync(RegisterAdopterDto dto, CancellationToken ct)
     {
-        // Create validates first, so invalid input never produces an Identity user.
-        var adopter = Adopter.Create(dto.Name, dto.Email, dto.Phone, dto.City, dto.State, clock.UtcNow);
+        var now = clock.UtcNow;
 
-        var userId = await unitOfWork.ExecuteInTransactionAsync(async token =>
+        // Build once up front so invalid input never produces an Identity user...
+        Adopter.Create(dto.Name, dto.Email, dto.Phone, dto.City, dto.State, now);
+
+        // ...but create the entity inside the transaction: the execution strategy may re-run the action, and
+        // a reused entity would already have a user assigned.
+        var (userId, adopter) = await unitOfWork.ExecuteInTransactionAsync(async token =>
         {
+            var adopter = Adopter.Create(dto.Name, dto.Email, dto.Phone, dto.City, dto.State, now);
             var id = await identity.CreateUserAsync(dto.Email, dto.Password, Roles.Adopter, token);
             adopter.AssignUser(id);
             adopters.Add(adopter);
             await unitOfWork.SaveChangesAsync(token);
-            return id;
+            return (id, adopter);
         }, ct);
 
         var jwt = tokens.CreateToken(userId, adopter.Email, Roles.Adopter, adopter.Id, adopter.Name);
