@@ -5,7 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { roleHome } from '../../core/auth/redirect';
 import { ToastService } from '../../core/toast/toast.service';
-import { FieldError } from '../../shared/field-error';
+import { FieldA11y, FieldError } from '../../shared/field-error';
 import { UFS } from '../../shared/labels';
 import {
   applyMask,
@@ -20,7 +20,7 @@ import {
 @Component({
   selector: 'app-register-shelter-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, FieldError],
+  imports: [ReactiveFormsModule, RouterLink, FieldError, FieldA11y],
   template: `
     <section class="container-page py-10 sm:py-14">
       <div class="card mx-auto max-w-2xl p-6 sm:p-8">
