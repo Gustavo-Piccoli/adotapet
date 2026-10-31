@@ -117,6 +117,34 @@ describe('PetListPage', () => {
     expect(el.querySelector<HTMLSelectElement>('#f-size')!.value).toBe('');
   });
 
+  it('collapses the filters behind a toggle that shows the active count', async () => {
+    await harness.navigateByUrl('/?species=Dog&state=RS');
+    flushList(paged([pet()]));
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+
+    const el: HTMLElement = harness.routeNativeElement!;
+    const toggle = el.querySelector<HTMLButtonElement>('[data-testid="filters-toggle"]')!;
+    const form = el.querySelector<HTMLFormElement>('form[aria-label="Filtrar pets"]')!;
+    expect(toggle.textContent).toContain('Filtros (2)');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(toggle.getAttribute('aria-controls')).toBe(form.id);
+
+    toggle.click();
+    harness.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(form.classList.contains('max-sm:hidden')).toBe(false);
+  });
+
+  it('shows plain "Filtros" when no filter is active', async () => {
+    await harness.navigateByUrl('/');
+    flushList(paged([pet()]));
+    harness.detectChanges();
+    const toggle = harness.routeNativeElement!.querySelector('[data-testid="filters-toggle"]')!;
+    expect(toggle.textContent).toContain('Filtros');
+    expect(toggle.textContent).not.toContain('(');
+  });
+
   it('retries from the error banner', async () => {
     await harness.navigateByUrl('/');
     http
