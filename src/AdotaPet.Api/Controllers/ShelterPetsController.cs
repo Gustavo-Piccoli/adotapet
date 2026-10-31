@@ -41,8 +41,25 @@ public sealed class ShelterPetsController : ControllerBase
     [HttpPut("{id:guid}/photo")]
     [RequestSizeLimit(6 * 1024 * 1024)]
     public async Task<IActionResult> UploadPhoto(
-        Guid id, IFormFile? file, [FromServices] IUploadPetPhotoUseCase useCase, CancellationToken ct)
+        Guid id, [FromServices] IUploadPetPhotoUseCase useCase, CancellationToken ct)
     {
+        // The form is read by hand instead of binding an IFormFile: MVC's form value provider swallows the
+        // BadHttpRequestException Kestrel throws when the body exceeds the size limit and answers an English 400.
+        // Read here, it reaches DomainExceptionHandler, which answers 413 with a pt-BR message.
+        if (!Request.HasFormContentType)
+            throw new DomainValidationException("Envie uma imagem no campo 'file'.");
+
+        IFormCollection form;
+        try
+        {
+            form = await Request.ReadFormAsync(ct);
+        }
+        catch (InvalidDataException)
+        {
+            throw new DomainValidationException("Envie uma imagem no campo 'file'.");
+        }
+
+        var file = form.Files.GetFile("file");
         if (file is null || file.Length == 0)
             throw new DomainValidationException("Envie uma imagem no campo 'file'.");
 
