@@ -6,6 +6,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { AdopterRequest, PetDetails } from '../../core/api/api.models';
 import { AuthResult, Role } from '../../core/auth/auth.models';
 import { AuthService } from '../../core/auth/auth.service';
+import { RouteAnnouncer } from '../../core/title/route-announcer';
 import { ToastService } from '../../core/toast/toast.service';
 import { PetDetailsPage } from './pet-details.page';
 
@@ -233,6 +234,18 @@ describe('PetDetailsPage', () => {
     http.expectOne('/api/pets/p1').flush(PET);
     harness.detectChanges();
     expect(el.textContent).toContain('Rex');
+  });
+
+  it('sets the document title and announces it after the pet loads', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      await open();
+      vi.advanceTimersByTime(60);
+      expect(document.title).toBe('Rex — AdotaPet');
+      expect(TestBed.inject(RouteAnnouncer).message()).toBe('Rex — AdotaPet');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('shows a not-found message on 404', async () => {

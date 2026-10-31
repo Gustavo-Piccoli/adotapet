@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { RouteAnnouncer } from '../core/title/route-announcer';
 import { Shell } from './shell';
 
 @Component({ template: '<h1>x</h1>' })
@@ -10,13 +11,18 @@ class Page {}
 describe('Shell route focus', () => {
   let harness: RouterTestingHarness;
   let host: HTMLElement;
-  let shell: ComponentFixture<Shell>;
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
           { path: 'a', title: 'Página A — AdotaPet', component: Page },
+          {
+            path: 'p/:id',
+            title: 'Pet — AdotaPet',
+            data: { announcesItself: true },
+            component: Page,
+          },
           { path: 'b', title: 'Página B — AdotaPet', component: Page },
         ]),
       ],
@@ -24,7 +30,7 @@ describe('Shell route focus', () => {
     const fixture = TestBed.createComponent(Shell);
     host = fixture.nativeElement;
     fixture.detectChanges();
-    shell = fixture;
+
     harness = await RouterTestingHarness.create();
     // Created before the harness, whose root handling can detach it from the document.
     document.body.appendChild(host);
@@ -40,13 +46,31 @@ describe('Shell route focus', () => {
     await harness.navigateByUrl('/b');
     const main = host.querySelector('main')!;
     expect(document.activeElement).toBe(main);
-    shell.detectChanges();
-    expect(host.querySelector('[data-testid="route-announcer"]')?.textContent).toContain(
-      'Página B — AdotaPet',
-    );
 
     (document.activeElement as HTMLElement).blur();
     await harness.navigateByUrl('/b?page=2');
     expect(document.activeElement).not.toBe(main);
+  });
+
+  it('re-announces identical titles and leaves self-announcing routes to the page', async () => {
+    vi.useFakeTimers();
+    try {
+      const announcer = TestBed.inject(RouteAnnouncer);
+      await harness.navigateByUrl('/a');
+      await harness.navigateByUrl('/b');
+      vi.advanceTimersByTime(60);
+      expect(announcer.message()).toBe('Página B — AdotaPet');
+
+      announcer.announce('Página B — AdotaPet');
+      expect(announcer.message()).toBe(''); // cleared first, so the repeat is announced again
+      vi.advanceTimersByTime(60);
+      expect(announcer.message()).toBe('Página B — AdotaPet');
+
+      await harness.navigateByUrl('/p/1');
+      vi.advanceTimersByTime(60);
+      expect(announcer.message()).toBe('Página B — AdotaPet'); // untouched: the page announces itself
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

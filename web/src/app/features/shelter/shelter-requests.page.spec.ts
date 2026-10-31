@@ -49,6 +49,26 @@ describe('ShelterRequestsPage', () => {
   const button = (text: string) =>
     Array.from(el.querySelectorAll('button')).find((b) => b.textContent?.trim() === text)!;
 
+  const dialogConfirm = () =>
+    el.querySelector<HTMLButtonElement>(
+      'app-confirm-dialog .btn-primary, app-confirm-dialog .btn-danger',
+    )!;
+
+  it('labels the dialog buttons explicitly (Aprovar primary, Recusar danger)', () => {
+    listReq('Pending').flush([REQUEST]);
+    harness.detectChanges();
+    button('Aprovar').click();
+    harness.detectChanges();
+    expect(dialogConfirm().textContent?.trim()).toBe('Aprovar');
+    expect(dialogConfirm().classList).toContain('btn-primary');
+    button('Cancelar').click();
+    harness.detectChanges();
+    button('Recusar').click();
+    harness.detectChanges();
+    expect(dialogConfirm().textContent?.trim()).toBe('Recusar');
+    expect(dialogConfirm().classList).toContain('btn-danger');
+  });
+
   it('loads Pending by default and shows contact and message', async () => {
     listReq('Pending').flush([REQUEST]);
     harness.detectChanges();
@@ -67,7 +87,7 @@ describe('ShelterRequestsPage', () => {
     expect(el.textContent).toContain(APPROVE_CONFIRM_MESSAGE);
     http.expectNone('/api/shelter/adoption-requests/r1/approve');
 
-    button('Continuar').click();
+    dialogConfirm().click();
     http.expectOne('/api/shelter/adoption-requests/r1/approve').flush(null);
     listReq('Pending').flush([]);
     harness.detectChanges();
@@ -89,7 +109,7 @@ describe('ShelterRequestsPage', () => {
     harness.detectChanges();
     button('Recusar').click();
     harness.detectChanges();
-    button('Continuar').click();
+    dialogConfirm().click();
     http
       .expectOne('/api/shelter/adoption-requests/r1/reject')
       .flush({ detail: 'Pedido já decidido.' }, { status: 409, statusText: 'Conflict' });
@@ -109,7 +129,7 @@ describe('ShelterRequestsPage', () => {
     expect(rejectConfirmMessage(REQUEST)).toContain('Ana');
     http.expectNone('/api/shelter/adoption-requests/r1/reject');
 
-    button('Continuar').click();
+    dialogConfirm().click();
     http.expectOne('/api/shelter/adoption-requests/r1/reject').flush(null);
     listReq('Pending').flush([]);
     harness.detectChanges();

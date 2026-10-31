@@ -132,6 +132,8 @@ const STATUSES: AdoptionRequestStatus[] = ['Pending', 'Approved', 'Rejected'];
       @if (confirming(); as c) {
         <app-confirm-dialog
           [message]="c.action === 'approve' ? approveMessage : rejectMessage(c.request)"
+          [confirmLabel]="c.action === 'approve' ? 'Aprovar' : 'Recusar'"
+          [danger]="c.action === 'reject'"
           (confirmed)="c.action === 'approve' ? approve(c.request) : reject(c.request)"
           (cancelled)="confirming.set(null)"
         />
