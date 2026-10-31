@@ -9,7 +9,9 @@ namespace AdotaPet.Api.IntegrationTests;
 
 public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly MsSqlContainer _sql = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
+    // Keep in sync with the sqlserver image in docker-compose.yml.
+    private readonly MsSqlContainer _sql =
+        new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-CU27-ubuntu-22.04").Build();
 
     private readonly string _photosPath =
         Path.Combine(Path.GetTempPath(), "adotapet-tests-" + Guid.NewGuid().ToString("N"));
