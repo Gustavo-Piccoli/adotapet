@@ -5,7 +5,7 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { ShelterRequest } from '../../core/api/api.models';
 import { ToastService } from '../../core/toast/toast.service';
-import { APPROVE_CONFIRM_MESSAGE, ShelterRequestsPage } from './shelter-requests.page';
+import { APPROVE_CONFIRM_MESSAGE, ShelterRequestsPage, rejectConfirmMessage } from './shelter-requests.page';
 
 const REQUEST: ShelterRequest = {
   id: 'r1',
@@ -88,11 +88,49 @@ describe('ShelterRequestsPage', () => {
     listReq('Pending').flush([REQUEST]);
     harness.detectChanges();
     button('Recusar').click();
+    harness.detectChanges();
+    button('Continuar').click();
     http
       .expectOne('/api/shelter/adoption-requests/r1/reject')
       .flush({ detail: 'Pedido já decidido.' }, { status: 409, statusText: 'Conflict' });
     expect(TestBed.inject(ToastService).toasts()[0].message).toBe('Pedido já decidido.');
     listReq('Pending').flush([]);
+  });
+
+  it('rejecting asks for confirmation first, then calls the API and focuses the heading', async () => {
+    listReq('Pending').flush([REQUEST]);
+    harness.detectChanges();
+
+    button('Recusar').click();
+    harness.detectChanges();
+    expect(el.textContent).toContain(
+      'Recusar o pedido de Ana para Rex? Essa ação não pode ser desfeita.',
+    );
+    expect(rejectConfirmMessage(REQUEST)).toContain('Ana');
+    http.expectNone('/api/shelter/adoption-requests/r1/reject');
+
+    button('Continuar').click();
+    http.expectOne('/api/shelter/adoption-requests/r1/reject').flush(null);
+    listReq('Pending').flush([]);
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    expect(document.activeElement).toBe(el.querySelector('h1'));
+  });
+
+  it('cancelling the reject confirmation does not call the API', () => {
+    listReq('Pending').flush([REQUEST]);
+    harness.detectChanges();
+    button('Recusar').click();
+    harness.detectChanges();
+    button('Cancelar').click();
+    harness.detectChanges();
+    expect(el.querySelector('app-confirm-dialog')).toBeNull();
+  });
+
+  it('shows the Aprovado chip with the success style', async () => {
+    listReq('Pending').flush([{ ...REQUEST, status: 'Approved' }]);
+    harness.detectChanges();
+    expect(el.querySelector('.chip-success')?.textContent).toContain('Aprovado');
   });
 
   it('changing the filter reloads with the chosen status', async () => {

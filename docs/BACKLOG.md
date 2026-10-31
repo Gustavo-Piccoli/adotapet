@@ -38,10 +38,7 @@ Written and compiled, but not yet run because Docker is not installed on the dev
 - Server 400 field errors are not mapped to form controls; whitespace-only inputs pass client validators.
 - `returnUrl` is lost between register and login; the default status filter is not written to the URL.
 - Pet details: race/flash in the pending-request check; some subscriptions lack `takeUntilDestroyed`; `blob:` URL sanitization is unverified.
-- No 404 page for unknown routes.
-- Forms lack `aria-required`/`aria-invalid`/`aria-describedby`; loading skeletons have no status text for screen readers.
-- Approved chip is not green (status colors are not distinguishable enough).
-- Accessibility/UX: placeholder contrast is about 3.5:1; the loading state has no visual cue; the error state has no retry; phone mask caret jumps.
+- Accessibility/UX: placeholder contrast is about 3.5:1; phone mask caret jumps.
 - Test gaps: no specs for my-requests and shelter-pets, the photo PUT method in the edit-save spec, or the `decide()` busy guard.
 
 ### Infra
@@ -68,6 +65,5 @@ Written and compiled, but not yet run because Docker is not installed on the dev
 - Add a restore layer to the API Dockerfile for faster rebuilds.
 - Add an API healthcheck in compose and make `web` wait for it.
 - Add timeouts and concurrency groups to CI; cache NuGet packages.
-- Show a skeleton/spinner while lists load and a retry button on errors.
 - Image resizing/thumbnails for pet photos to cut list payloads.
 - Rate limiting on login and registration endpoints.

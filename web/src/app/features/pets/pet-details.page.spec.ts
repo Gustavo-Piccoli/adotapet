@@ -173,13 +173,66 @@ describe('PetDetailsPage', () => {
 
     http
       .expectOne('/api/pets/p1/adoption-requests')
-      .flush({ detail: 'Você já tem um pedido.' }, { status: 409, statusText: 'Conflict' });
+      .flush(
+        { detail: 'Você já tem um pedido.', code: 'duplicate_pending_request' },
+        { status: 409, statusText: 'Conflict' },
+      );
     harness.detectChanges();
 
     expect(el.querySelector('[data-testid="pending-badge"]')?.textContent).toContain(
       'Pedido em análise',
     );
     expect(TestBed.inject(ToastService).toasts()).toHaveLength(0);
+  });
+
+  it('reloads the pet and toasts the detail when it became unavailable (409 pet_unavailable)', async () => {
+    login('Adopter');
+    const el = await open();
+    button(el, 'Quero adotar')!.click();
+    harness.detectChanges();
+    fillAndSend(el);
+
+    http.expectOne('/api/pets/p1/adoption-requests').flush(
+      { detail: 'Este pet não está mais disponível para adoção.', code: 'pet_unavailable' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    http.expectOne('/api/pets/p1').flush({ ...PET, status: 'Adopted' });
+    http.expectOne('/api/adopter/adoption-requests').flush([]);
+    harness.detectChanges();
+
+    expect(el.querySelector('[data-testid="pending-badge"]')).toBeNull();
+    expect(el.querySelector('[data-testid="adopted-badge"]')).not.toBeNull();
+    expect(button(el, 'Quero adotar')).toBeUndefined();
+    expect(TestBed.inject(ToastService).toasts()[0].message).toBe(
+      'Este pet não está mais disponível para adoção.',
+    );
+  });
+
+  it('only toasts the detail on a 409 with an unknown code', async () => {
+    login('Adopter');
+    const el = await open();
+    button(el, 'Quero adotar')!.click();
+    harness.detectChanges();
+    fillAndSend(el);
+
+    http
+      .expectOne('/api/pets/p1/adoption-requests')
+      .flush({ detail: 'Conflito qualquer.' }, { status: 409, statusText: 'Conflict' });
+    harness.detectChanges();
+
+    expect(el.querySelector('[data-testid="pending-badge"]')).toBeNull();
+    expect(TestBed.inject(ToastService).toasts()[0].message).toBe('Conflito qualquer.');
+  });
+
+  it('retries the load from the error banner', async () => {
+    await harness.navigateByUrl('/pets/p1');
+    http.expectOne('/api/pets/p1').flush({}, { status: 500, statusText: 'Server Error' });
+    harness.detectChanges();
+    const el = harness.routeNativeElement as HTMLElement;
+    button(el, 'Tentar novamente')!.click();
+    http.expectOne('/api/pets/p1').flush(PET);
+    harness.detectChanges();
+    expect(el.textContent).toContain('Rex');
   });
 
   it('shows a not-found message on 404', async () => {

@@ -11,8 +11,9 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AgeGroup, PetInput, Sex, ShelterPet, Size, Species } from '../../core/api/api.models';
 import { ShelterApi } from '../../core/api/shelter.api';
 import { ToastService } from '../../core/toast/toast.service';
+import { ErrorBanner } from '../../shared/error-banner';
 import { EmptyState } from '../../shared/empty-state';
-import { FieldError } from '../../shared/field-error';
+import { FieldA11y, FieldError } from '../../shared/field-error';
 import { AGE_GROUP_LABELS, SEX_LABELS, SIZE_LABELS, SPECIES_LABELS } from '../../shared/labels';
 
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -42,21 +43,23 @@ function options<T extends string>(labels: Record<T, string>): { value: T; label
 @Component({
   selector: 'app-pet-form-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, FieldError, EmptyState],
+  imports: [ReactiveFormsModule, RouterLink, FieldError, FieldA11y, EmptyState, ErrorBanner],
   template: `
     <section class="container-page py-8">
       <a routerLink="/ong/pets" class="btn btn-ghost mb-4 -ml-3">&larr; Voltar para meus pets</a>
 
       @if (loading()) {
+        <p class="sr-only" role="status">Carregando…</p>
         <div class="card h-96 animate-pulse bg-cream-200" aria-hidden="true"></div>
       } @else if (notFound()) {
         <app-empty-state message="Pet não encontrado.">
           <a routerLink="/ong/pets" class="btn btn-primary mt-5">Voltar para meus pets</a>
         </app-empty-state>
       } @else if (failed()) {
-        <div class="rounded-card bg-red-50 px-5 py-4 text-red-800" role="alert">
-          Não foi possível carregar o pet. Tente novamente em instantes.
-        </div>
+        <app-error-banner
+          message="Não foi possível carregar o pet. Tente novamente em instantes."
+          (retry)="load()"
+        />
       } @else {
         <div class="card mx-auto max-w-2xl p-6 sm:p-8">
           <h1 class="text-3xl font-bold text-pine-900">
@@ -197,17 +200,21 @@ export class PetFormPage {
 
   constructor() {
     inject(DestroyRef).onDestroy(() => this.revokePreview());
-    if (this.petId) {
-      this.loading.set(true);
-      this.api.getPet(this.petId).subscribe({
-        next: (pet) => this.fill(pet),
-        error: (err: HttpErrorResponse) => {
-          if (err.status === 404) this.notFound.set(true);
-          else this.failed.set(true);
-          this.loading.set(false);
-        },
-      });
-    }
+    if (this.petId) this.load();
+  }
+
+  protected load(): void {
+    if (!this.petId) return;
+    this.loading.set(true);
+    this.failed.set(false);
+    this.api.getPet(this.petId).subscribe({
+      next: (pet) => this.fill(pet),
+      error: (err: HttpErrorResponse) => {
+        if (err.status === 404) this.notFound.set(true);
+        else this.failed.set(true);
+        this.loading.set(false);
+      },
+    });
   }
 
   protected onFileChange(event: Event): void {

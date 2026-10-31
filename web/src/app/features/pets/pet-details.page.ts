@@ -1,16 +1,19 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { catchError, of, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, of, switchMap, tap } from 'rxjs';
 import { PetDetails } from '../../core/api/api.models';
 import { AdoptionRequestsApi } from '../../core/api/adoption-requests.api';
 import { PetsApi } from '../../core/api/pets.api';
 import { AuthService } from '../../core/auth/auth.service';
+import { ProblemDetails } from '../../core/http/problem-details';
 import { ToastService } from '../../core/toast/toast.service';
+import { ErrorBanner } from '../../shared/error-banner';
 import { EmptyState } from '../../shared/empty-state';
-import { FieldError } from '../../shared/field-error';
+import { FieldA11y, FieldError } from '../../shared/field-error';
 import { AGE_GROUP_LABELS, SEX_LABELS, SIZE_LABELS, SPECIES_LABELS } from '../../shared/labels';
 import { PawIcon } from '../../shared/paw-icon';
 import { formatPhone } from '../../shared/validators';
@@ -18,21 +21,23 @@ import { formatPhone } from '../../shared/validators';
 @Component({
   selector: 'app-pet-details-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, PawIcon, EmptyState, FieldError],
+  imports: [ReactiveFormsModule, RouterLink, PawIcon, EmptyState, ErrorBanner, FieldError, FieldA11y],
   template: `
     <div class="container-page py-8">
       <a routerLink="/" class="btn btn-ghost mb-4 -ml-3">&larr; Voltar para os pets</a>
 
       @if (loading()) {
+        <p class="sr-only" role="status">Carregando…</p>
         <div class="card h-96 animate-pulse bg-cream-200" aria-hidden="true"></div>
       } @else if (notFound()) {
         <app-empty-state message="Pet não encontrado.">
           <a routerLink="/" class="btn btn-primary mt-5">Ver todos os pets</a>
         </app-empty-state>
       } @else if (failed()) {
-        <div class="rounded-card bg-red-50 px-5 py-4 text-red-800" role="alert">
-          Não foi possível carregar o pet. Tente novamente em instantes.
-        </div>
+        <app-error-banner
+          message="Não foi possível carregar o pet. Tente novamente em instantes."
+          (retry)="reload$.next()"
+        />
       } @else if (pet(); as p) {
         <article class="grid gap-8 lg:grid-cols-2">
           <div class="card aspect-4/3 bg-clay-50">
@@ -148,6 +153,8 @@ export class PetDetailsPage {
   private readonly requestsApi = inject(AdoptionRequestsApi);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly title = inject(Title);
+  protected readonly reload$ = new BehaviorSubject<void>(undefined);
 
   protected readonly phone = formatPhone;
   protected readonly species = SPECIES_LABELS;
@@ -168,8 +175,8 @@ export class PetDetailsPage {
   });
 
   constructor() {
-    inject(ActivatedRoute)
-      .paramMap.pipe(
+    combineLatest([inject(ActivatedRoute).paramMap, this.reload$])
+      .pipe(
         tap(() => {
           this.loading.set(true);
           this.notFound.set(false);
@@ -178,7 +185,7 @@ export class PetDetailsPage {
           this.formOpen.set(false);
           this.form.reset();
         }),
-        switchMap((params) =>
+        switchMap(([params]) =>
           this.petsApi.get(params.get('id') ?? '').pipe(
             catchError((err: HttpErrorResponse) => {
               if (err.status === 404) this.notFound.set(true);
@@ -192,6 +199,7 @@ export class PetDetailsPage {
       .subscribe((pet) => {
         this.pet.set(pet);
         this.loading.set(false);
+        if (pet) this.title.setTitle(`${pet.name} — AdotaPet`);
         if (pet && this.auth.isAdopter()) this.checkPending(pet.id);
       });
   }
@@ -223,8 +231,15 @@ export class PetDetailsPage {
       },
       error: (err: HttpErrorResponse) => {
         this.sending.set(false);
-        if (err.status === 409) this.pending.set(true);
-        else this.toast.error(this.toast.problemMessage(err));
+        const code = err.status === 409 ? (err.error as ProblemDetails | null)?.code : undefined;
+        if (code === 'duplicate_pending_request') {
+          this.pending.set(true);
+        } else {
+          // Anything else, including pet_unavailable: tell the user why. If the pet was adopted
+          // meanwhile, reload it so the page shows "Adotado" and hides the adopt button.
+          this.toast.error(this.toast.problemMessage(err));
+          if (code === 'pet_unavailable') this.reload$.next();
+        }
       },
     });
   }

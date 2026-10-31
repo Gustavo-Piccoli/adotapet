@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { AdoptionRequestsApi } from '../../core/api/adoption-requests.api';
 import { AdopterRequest } from '../../core/api/api.models';
+import { ErrorBanner } from '../../shared/error-banner';
 import { EmptyState } from '../../shared/empty-state';
 import { formatDate } from '../../shared/format';
 import { REQUEST_STATUS_LABELS } from '../../shared/labels';
@@ -10,17 +11,20 @@ import { PawIcon } from '../../shared/paw-icon';
 @Component({
   selector: 'app-my-requests-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, EmptyState, PawIcon],
+  imports: [RouterLink, EmptyState, ErrorBanner, PawIcon],
   template: `
     <section class="container-page py-8">
       <h1 class="text-3xl font-bold text-pine-900">Meus pedidos</h1>
 
       @if (loading()) {
+        <p class="sr-only" role="status">Carregando…</p>
         <div class="card mt-6 h-32 animate-pulse bg-cream-200" aria-hidden="true"></div>
       } @else if (failed()) {
-        <div class="mt-6 rounded-card bg-red-50 px-5 py-4 text-red-800" role="alert">
-          Não foi possível carregar seus pedidos. Tente novamente em instantes.
-        </div>
+        <app-error-banner
+          class="mt-6 block"
+          message="Não foi possível carregar seus pedidos. Tente novamente em instantes."
+          (retry)="load()"
+        />
       } @else if (requests().length === 0) {
         <div class="mt-6">
           <app-empty-state message="Você ainda não fez nenhum pedido de adoção.">
@@ -51,6 +55,7 @@ import { PawIcon } from '../../shared/paw-icon';
                   <span
                     class="chip"
                     [class.chip-honey]="r.status === 'Pending'"
+                    [class.chip-success]="r.status === 'Approved'"
                     [class.chip-clay]="r.status === 'Rejected'"
                     >{{ statusLabels[r.status] }}</span
                   >
@@ -72,8 +77,16 @@ export class MyRequestsPage {
   protected readonly loading = signal(true);
   protected readonly failed = signal(false);
 
+  private readonly api = inject(AdoptionRequestsApi);
+
   constructor() {
-    inject(AdoptionRequestsApi)
+    this.load();
+  }
+
+  protected load(): void {
+    this.loading.set(true);
+    this.failed.set(false);
+    this.api
       .listMine()
       .subscribe({
         next: (list) => {
