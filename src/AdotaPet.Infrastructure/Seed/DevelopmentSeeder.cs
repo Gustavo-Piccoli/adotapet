@@ -92,8 +92,10 @@ public static class DevelopmentSeeder
             bruno.AssignUser(await identity.CreateUserAsync("bruno@adotapet.dev", Password, Roles.Adopter, token));
             adopters.Add(bruno);
 
-            var all = ShelterOnePets.Select(s => CreatePet(shelterOne, s, now))
-                .Concat(ShelterTwoPets.Select(s => CreatePet(shelterTwo, s, now)))
+            // Stagger creation times (the first pet is the newest) so the showcase order is deterministic.
+            var all = ShelterOnePets.Select(s => (Shelter: shelterOne, Seed: s))
+                .Concat(ShelterTwoPets.Select(s => (Shelter: shelterTwo, Seed: s)))
+                .Select((x, i) => CreatePet(x.Shelter, x.Seed, now.AddHours(-i)))
                 .ToList();
 
             for (var i = 0; i < all.Count; i++)
