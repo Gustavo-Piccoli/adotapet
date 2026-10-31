@@ -1,6 +1,6 @@
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: mcr.microsoft.com/mssql/server:2022-CU27-ubuntu-22.04
     platform: linux/amd64
     environment:
       ACCEPT_EULA: "Y"
@@ -32,6 +32,13 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
+    healthcheck:
+      # Kestrel only listens after migrations and seed finish; aspnet has bash but no curl
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/8080' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
 
   web:
     build:
@@ -39,7 +46,8 @@ services:
     ports:
       - "127.0.0.1:4200:80"
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   sqldata:
