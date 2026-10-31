@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using AdotaPet.Application.Accounts.Dtos;
+using AdotaPet.Domain.Common;
 
 namespace AdotaPet.Api.IntegrationTests;
 
@@ -16,6 +17,7 @@ public sealed class AuthTests(ApiFactory factory)
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var body = await response.Content.ReadFromJsonAsync<AuthResultDto>(TestAuth.Json);
+        Assert.Equal("/api/me", response.Headers.Location?.OriginalString);
         Assert.Equal("Shelter", body!.Role);
         Assert.False(string.IsNullOrEmpty(body.AccessToken));
     }
@@ -44,5 +46,6 @@ public sealed class AuthTests(ApiFactory factory)
         var second = await client.PostAsJsonAsync("/api/auth/register/shelter", TestAuth.NewShelter(email), TestAuth.Json);
 
         Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+        Assert.Equal(ConflictCodes.EmailTaken, await TestAuth.ConflictCodeAsync(second));
     }
 }

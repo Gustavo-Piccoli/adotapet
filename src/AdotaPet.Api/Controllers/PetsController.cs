@@ -44,6 +44,7 @@ public sealed class PetsController : ControllerBase
         [FromServices] ICreateAdoptionRequestUseCase useCase, CancellationToken ct)
     {
         var requestId = await useCase.ExecuteAsync(User.GetProfileId(), id, body.Message, ct);
-        return Created("/api/adopter/adoption-requests", new { id = requestId });
+        // No endpoint reads a single request, so there is no meaningful Location to send.
+        return StatusCode(StatusCodes.Status201Created, new { id = requestId });
     }
 }

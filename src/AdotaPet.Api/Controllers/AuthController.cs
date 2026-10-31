@@ -8,15 +8,18 @@ namespace AdotaPet.Api.Controllers;
 [Route("api/auth")]
 public sealed class AuthController : ControllerBase
 {
+    // The created resource is the caller's own account, which GET /api/me returns.
+    private const string MeLocation = "/api/me";
+
     [HttpPost("register/shelter")]
     public async Task<ActionResult<AuthResultDto>> RegisterShelter(
         RegisterShelterDto dto, [FromServices] IRegisterShelterUseCase useCase, CancellationToken ct)
-        => StatusCode(StatusCodes.Status201Created, await useCase.ExecuteAsync(dto, ct));
+        => Created(MeLocation, await useCase.ExecuteAsync(dto, ct));
 
     [HttpPost("register/adopter")]
     public async Task<ActionResult<AuthResultDto>> RegisterAdopter(
         RegisterAdopterDto dto, [FromServices] IRegisterAdopterUseCase useCase, CancellationToken ct)
-        => StatusCode(StatusCodes.Status201Created, await useCase.ExecuteAsync(dto, ct));
+        => Created(MeLocation, await useCase.ExecuteAsync(dto, ct));
 
     [HttpPost("login")]
     public async Task<ActionResult<AuthResultDto>> Login(
