@@ -1,0 +1,59 @@
+# Backlog
+
+Single source of truth for pending work. Keep it updated here (see `CLAUDE.md`).
+
+## Pending verification
+
+Verified locally on 2026-10-31: all 19 API integration tests (Testcontainers), `docker compose up --build` (healthy in about 25 s), migrations applied to a real SQL Server, API healthcheck, photo uploads on the non-root `photos` volume, the full browser E2E (visitor, adopter, shelter) and the README screenshots. CI (backend and frontend jobs) green on GitHub on the first pull request.
+
+- [ ] (Optional) Run `docker compose up --build` on another clean machine (macOS/Linux).
+
+## Technical debts
+
+- Auth token is stored in `localStorage` (move to an httpOnly cookie).
+- No refresh token: the session ends after 60 minutes.
+
+### Backend
+- `PetRepository.SearchAvailableAsync` has no page guard of its own (only the use case clamps; `Paging.MaxPage` caps the page).
+- The concurrency conflict message says "pedido" for any concurrency conflict (the pet `RowVersion` conflict reuses it).
+- Race: creating a new pending request for a pet while another request for it is being approved is not guarded (approval only rejects the pending requests it sees).
+- No login brute-force protection (lockout or rate limiting).
+- Photo cleanup of the previous file can fail silently on a Windows file lock.
+- `IdentityService` has an unused cancellation token.
+- `ProblemDetails` responses have no `Type`.
+- `Guard.Phone` is coupled to `Cnpj.Normalize`.
+- Non-seekable photo streams are buffered without being capped at `MaxBytes + 1`.
+- Duplicated role-to-profile lookup and null-navigation guard in use cases; the seeder duplicates the "reject siblings on approve" rule.
+- Test gaps: enum theory coverage, `Guid.Empty` ids, adopter requests listing, a weak `ThrowsAny` assertion, and the non-image upload test does not assert that nothing was written to disk.
+
+### Frontend
+- Interceptor matches the API URL by substring; a 401 while already on `/entrar` navigates again; the stored session shape is not validated.
+- Server 400 field errors are not mapped to form controls; whitespace-only inputs pass client validators.
+- `returnUrl` is lost between register and login; the default status filter is not written to the URL.
+- Pet details: some subscriptions lack `takeUntilDestroyed`; `blob:` URL sanitization is unverified.
+- Accessibility/UX: placeholder contrast is about 3.5:1; phone mask caret jumps.
+- Test gaps: no specs for my-requests and shelter-pets, the photo PUT method in the edit-save spec, or the `decide()` busy guard.
+
+### Infra
+- An `SA_PASSWORD` containing `;` or `=` breaks the connection string.
+
+## Future features
+
+- Public deploy (Azure App Service + Azure SQL, cloud photo storage).
+- Adopter notifies a shelter about an animal that needs a home.
+- Gallery with several photos per pet.
+- Adopter can cancel a request; favorites.
+- Deactivate/delete a pet; reopen an adopted pet (adoption that did not work out).
+- E-mail notifications (request received, request decided).
+- Refresh token and password recovery; move the token from `localStorage` to an httpOnly cookie.
+- Cities and states from the IBGE API.
+- Shelter dashboard with numbers (requests per month, adoptions).
+- End-to-end tests with Playwright.
+
+## Improvements
+
+- Cache NuGet packages in CI.
+- Paginate the shelter lists (shelter pets and shelter requests are returned unpaged).
+- Pin base images by digest and add a CSP that allows the Google Fonts and inline critical CSS the Angular build emits (only `frame-ancestors` is set today).
+- Image resizing/thumbnails for pet photos to cut list payloads.
+- Rate limiting on login and registration endpoints.

@@ -1,0 +1,22 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+*.log
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# IDE
+.idea/
+.vscode/
+
+# Local / project
+.env
+data/
+.superpowers/
