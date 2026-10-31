@@ -133,6 +133,45 @@ describe('PetDetailsPage', () => {
     expect(button(el, 'Quero adotar')).toBeUndefined();
   });
 
+  it('does not offer adoption to an adopter until the pending check resolves', async () => {
+    login('Adopter');
+    await harness.navigateByUrl('/pets/p1');
+    http.expectOne('/api/pets/p1').flush(PET);
+    const checkReq = http.expectOne('/api/adopter/adoption-requests');
+    harness.detectChanges();
+    const el = harness.routeNativeElement as HTMLElement;
+    expect(el.textContent).toContain('Rex');
+    expect(button(el, 'Quero adotar')).toBeUndefined();
+    expect(el.querySelector('[data-testid="pending-badge"]')).toBeNull();
+
+    checkReq.flush([{ petId: 'p1', status: 'Pending' } as AdopterRequest]);
+    harness.detectChanges();
+    expect(el.querySelector('[data-testid="pending-badge"]')).not.toBeNull();
+    expect(button(el, 'Quero adotar')).toBeUndefined();
+  });
+
+  it('offers adoption once the pending check resolves without a pending request', async () => {
+    login('Adopter');
+    await harness.navigateByUrl('/pets/p1');
+    http.expectOne('/api/pets/p1').flush(PET);
+    http.expectOne('/api/adopter/adoption-requests').flush([]);
+    harness.detectChanges();
+    expect(button(harness.routeNativeElement as HTMLElement, 'Quero adotar')).toBeDefined();
+  });
+
+  it('drops the pending check of a previous pet when navigating to another', async () => {
+    login('Adopter');
+    await harness.navigateByUrl('/pets/p1');
+    http.expectOne('/api/pets/p1').flush(PET);
+    const stale = http.expectOne('/api/adopter/adoption-requests');
+    await harness.navigateByUrl('/pets/p2');
+    expect(stale.cancelled).toBe(true);
+    http.expectOne('/api/pets/p2').flush({ ...PET, id: 'p2', name: 'Mel' });
+    http.expectOne('/api/adopter/adoption-requests').flush([]);
+    harness.detectChanges();
+    expect(button(harness.routeNativeElement as HTMLElement, 'Quero adotar')).toBeDefined();
+  });
+
   it('validates the message length before posting', async () => {
     login('Adopter');
     const el = await open();
