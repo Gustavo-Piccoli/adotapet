@@ -3,7 +3,7 @@
 > **English summary:** AdotaPet is a full-stack pet adoption site (ASP.NET Core 10 + Angular 21 + SQL Server) built as a portfolio project. Shelters publish pets, adopters send adoption requests, and shelters approve or reject them.
 > It runs with a single `docker compose up --build` and ships with demo data, Clean Architecture, role-based JWT auth, and automated tests with CI.
 
-> **Status:** o `docker compose`, os 19 testes de integração da API (Testcontainers) e o fluxo completo no navegador (visitante, adotante e ONG) foram verificados localmente em 2026-10-31. O CI roda no GitHub depois do primeiro push.
+> **Status:** o `docker compose`, os 19 testes de integração da API (Testcontainers) e o fluxo completo no navegador (visitante, adotante e ONG) foram verificados localmente em 2026-10-31, e o CI do GitHub Actions passa (backend com testes de integração e front).
 
 Site de adoção de animais: **ONGs** publicam pets disponíveis e **adotantes** enviam pedidos de adoção, que a ONG aprova ou recusa. Projeto de portfólio de Gustavo Piccoli, feito na stack .NET / Angular / SQL Server.
 
