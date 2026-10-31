@@ -10,6 +10,7 @@ import { ConfirmDialog } from '../../shared/confirm-dialog';
 import { EmptyState } from '../../shared/empty-state';
 import { formatDate } from '../../shared/format';
 import { REQUEST_STATUS_LABELS } from '../../shared/labels';
+import { formatPhone } from '../../shared/validators';
 
 export const APPROVE_CONFIRM_MESSAGE =
   'Aprovar este pedido marca o pet como adotado e recusa os outros pedidos pendentes. Continuar?';
@@ -82,7 +83,7 @@ const STATUSES: AdoptionRequestStatus[] = ['Pending', 'Approved', 'Rejected'];
                 </div>
                 <div class="flex gap-2">
                   <dt class="font-semibold">Telefone:</dt>
-                  <dd>{{ r.adopterPhone }}</dd>
+                  <dd>{{ phone(r.adopterPhone) }}</dd>
                 </div>
               </dl>
               <p class="mt-3 whitespace-pre-line">{{ r.message }}</p>
@@ -130,6 +131,7 @@ export class ShelterRequestsPage {
   protected readonly statuses = STATUSES;
   protected readonly labels = REQUEST_STATUS_LABELS;
   protected readonly date = formatDate;
+  protected readonly phone = formatPhone;
   protected readonly approveMessage = APPROVE_CONFIRM_MESSAGE;
 
   protected readonly requests = signal<ShelterRequest[]>([]);

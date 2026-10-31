@@ -53,7 +53,7 @@ describe('ShelterRequestsPage', () => {
     listReq('Pending').flush([REQUEST]);
     harness.detectChanges();
     expect(el.textContent).toContain('ana@x.com');
-    expect(el.textContent).toContain('51999999999');
+    expect(el.textContent).toContain('(51) 99999-9999');
     expect(el.textContent).toContain('Quero adotar');
     expect(el.textContent).toContain('02/01/2026');
   });

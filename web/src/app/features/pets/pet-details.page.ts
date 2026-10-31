@@ -13,6 +13,7 @@ import { EmptyState } from '../../shared/empty-state';
 import { FieldError } from '../../shared/field-error';
 import { AGE_GROUP_LABELS, SEX_LABELS, SIZE_LABELS, SPECIES_LABELS } from '../../shared/labels';
 import { PawIcon } from '../../shared/paw-icon';
+import { formatPhone } from '../../shared/validators';
 
 @Component({
   selector: 'app-pet-details-page',
@@ -123,7 +124,7 @@ import { PawIcon } from '../../shared/paw-icon';
               <dl class="mt-3 grid gap-1 text-sm">
                 <div class="flex gap-2">
                   <dt class="font-semibold">Telefone:</dt>
-                  <dd>{{ p.shelter.phone }}</dd>
+                  <dd>{{ phone(p.shelter.phone) }}</dd>
                 </div>
                 <div class="flex gap-2">
                   <dt class="font-semibold">E-mail:</dt>
@@ -148,6 +149,7 @@ export class PetDetailsPage {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
+  protected readonly phone = formatPhone;
   protected readonly species = SPECIES_LABELS;
   protected readonly sex = SEX_LABELS;
   protected readonly size = SIZE_LABELS;
