@@ -3,13 +3,27 @@
 > **English summary:** AdotaPet is a full-stack pet adoption site (ASP.NET Core 10 + Angular 21 + SQL Server) built as a portfolio project. Shelters publish pets, adopters send adoption requests, and shelters approve or reject them.
 > It runs with a single `docker compose up --build` and ships with demo data, Clean Architecture, role-based JWT auth, and automated tests with CI.
 
-> **Status:** o `docker compose`, o CI e os testes de integração ainda não foram verificados em uma execução real (o Docker ainda não estava instalado na máquina de desenvolvimento). Veja "Pending verification" em [`docs/BACKLOG.md`](docs/BACKLOG.md).
+> **Status:** o `docker compose`, os 19 testes de integração da API (Testcontainers) e o fluxo completo no navegador (visitante, adotante e ONG) foram verificados localmente em 2026-10-31. O CI roda no GitHub depois do primeiro push.
 
 Site de adoção de animais: **ONGs** publicam pets disponíveis e **adotantes** enviam pedidos de adoção, que a ONG aprova ou recusa. Projeto de portfólio de Gustavo Piccoli, feito na stack .NET / Angular / SQL Server.
 
 ## Capturas de tela
 
-Capturas de tela em breve (ver [`docs/BACKLOG.md`](docs/BACKLOG.md)).
+<p align="center"><img src="docs/images/home.png" alt="Vitrine de pets para adoção" width="800"></p>
+
+<table>
+  <tr>
+    <td><img src="docs/images/pet-details.png" alt="Página do pet com o formulário de pedido de adoção"><br><sub>Pet com o formulário de pedido de adoção (adotante)</sub></td>
+    <td><img src="docs/images/my-requests.png" alt="Lista Meus pedidos"><br><sub>Meus pedidos (adotante)</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/shelter-requests.png" alt="Pedidos de adoção recebidos pela ONG"><br><sub>Pedidos recebidos (ONG)</sub></td>
+    <td><img src="docs/images/approve-dialog.png" alt="Confirmação ao aprovar um pedido"><br><sub>Confirmação ao aprovar um pedido</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="docs/images/mobile-home.png" alt="Vitrine no celular" width="240"><br><sub>Vitrine no celular, com filtros recolhidos</sub></td>
+  </tr>
+</table>
 
 ## Funcionalidades
 
