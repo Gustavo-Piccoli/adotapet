@@ -10,6 +10,8 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.23.0" />
+    <!-- Direct reference only to pin a patched version: the copy that arrives transitively (through the
+         Identity/EF packages) carries a vulnerability advisory. Drop it once those packages ship a fixed one. -->
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
   </ItemGroup>
   <ItemGroup>
