@@ -39,6 +39,7 @@ public class AdoptionRequestTests
 
         var ex = Assert.Throws<ConflictException>(() => AdoptionRequest.Create(pet, Guid.NewGuid(), Message, Now));
         Assert.Equal("Este pet não está mais disponível para adoção.", ex.Message);
+        Assert.Equal(ConflictCodes.PetUnavailable, ex.Code);
     }
 
     [Fact]
@@ -74,6 +75,7 @@ public class AdoptionRequestTests
         var request = NewRequest();
         request.Reject(Now);
 
-        Assert.Throws<ConflictException>(() => request.Approve(Now));
+        var ex = Assert.Throws<ConflictException>(() => request.Approve(Now));
+        Assert.Equal(ConflictCodes.RequestAlreadyDecided, ex.Code);
     }
 }

@@ -50,7 +50,7 @@ public sealed class IdentityService(
     {
         var list = errors.ToList();
         if (list.Any(e => e.Code is "DuplicateEmail" or "DuplicateUserName"))
-            return new ConflictException("Já existe uma conta com este e-mail.");
+            return new ConflictException("Já existe uma conta com este e-mail.", ConflictCodes.EmailTaken);
 
         var messages = list
             .Select(e => Messages.TryGetValue(e.Code, out var m) ? m : "Dados da conta inválidos.")

@@ -25,6 +25,24 @@ public sealed class AdoptionFlowTests(ApiFactory factory)
 
         Assert.Equal(HttpStatusCode.Created, first.StatusCode);
         Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+        Assert.Equal(ConflictCodes.DuplicatePendingRequest, await TestAuth.ConflictCodeAsync(second));
+    }
+
+    [Fact]
+    public async Task Request_for_an_adopted_pet_returns_409_with_pet_unavailable_code()
+    {
+        var shelter = await TestAuth.RegisterShelterAsync(factory);
+        var adopterA = await TestAuth.RegisterAdopterAsync(factory);
+        var adopterB = await TestAuth.RegisterAdopterAsync(factory);
+        var petId = await TestAuth.CreatePetAsync(shelter);
+        var requestA = await TestAuth.RequestAdoptionAsync(adopterA, petId);
+        (await shelter.PostAsync($"/api/shelter/adoption-requests/{requestA}/approve", null)).EnsureSuccessStatusCode();
+
+        var response = await adopterB.PostAsJsonAsync($"/api/pets/{petId}/adoption-requests",
+            new { message = "Também quero adotar" }, TestAuth.Json);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal(ConflictCodes.PetUnavailable, await TestAuth.ConflictCodeAsync(response));
     }
 
     [Fact]

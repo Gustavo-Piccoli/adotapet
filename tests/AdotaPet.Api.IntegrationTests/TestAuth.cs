@@ -88,5 +88,12 @@ public static class TestAuth
         return client;
     }
 
+    /// <summary>Reads the machine-readable `code` extension of a ProblemDetails response.</summary>
+    public static async Task<string?> ConflictCodeAsync(HttpResponseMessage response)
+    {
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return doc.RootElement.TryGetProperty("code", out var code) ? code.GetString() : null;
+    }
+
     public sealed record IdBody(Guid Id);
 }

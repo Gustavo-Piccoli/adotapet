@@ -23,7 +23,7 @@ public sealed class AdoptionRequest
     {
         ArgumentNullException.ThrowIfNull(pet);
         if (pet.Status != PetStatus.Available)
-            throw new ConflictException("Este pet não está mais disponível para adoção.");
+            throw new ConflictException("Este pet não está mais disponível para adoção.", ConflictCodes.PetUnavailable);
 
         return new AdoptionRequest
         {
@@ -44,7 +44,7 @@ public sealed class AdoptionRequest
     private void Decide(AdoptionRequestStatus status, DateTimeOffset now)
     {
         if (Status != AdoptionRequestStatus.Pending)
-            throw new ConflictException("Este pedido já foi decidido.");
+            throw new ConflictException("Este pedido já foi decidido.", ConflictCodes.RequestAlreadyDecided);
         Status = status;
         DecidedAt = now;
     }

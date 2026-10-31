@@ -19,7 +19,7 @@ public sealed class CreateAdoptionRequestUseCase(IPetRepository pets, IAdoptionR
         var pet = await pets.GetByIdAsync(petId, ct) ?? throw PetMapping.PetNotFound();
 
         if (await requests.HasPendingAsync(adopterId, petId, ct))
-            throw new ConflictException("Você já tem um pedido em análise para este pet.");
+            throw new ConflictException("Você já tem um pedido em análise para este pet.", ConflictCodes.DuplicatePendingRequest);
 
         var request = AdoptionRequest.Create(pet, adopterId, message, clock.UtcNow);
         requests.Add(request);
