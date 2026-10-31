@@ -39,9 +39,37 @@ public static class ApiErrorMessages
     /// <summary>Automatic [ApiController] 400 for model binding failures, in pt-BR.</summary>
     public static IActionResult InvalidModelState(ActionContext context)
     {
+        var parameters = context.ActionDescriptor.Parameters.Select(p => p.Name);
+        var errors = TranslateErrors(context.ModelState, parameters);
+
+        var factory = context.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
+        // The SPA shows `detail` first, so it carries the first specific message.
+        var problem = factory.CreateValidationProblemDetails(
+            context.HttpContext,
+            new ModelStateDictionary(),
+            StatusCodes.Status400BadRequest,
+            title: ValidationTitle,
+            detail: errors.Values.SelectMany(m => m).FirstOrDefault() ?? ValidationDetail);
+        foreach (var (field, messages) in errors)
+            problem.Errors[field] = [.. messages];
+
+        return new BadRequestObjectResult(problem) { ContentTypes = { "application/problem+json" } };
+    }
+
+    /// <summary>Groups the model state errors by field, translated to pt-BR.</summary>
+    /// <param name="parameterNames">Action parameter names: when the body itself failed to parse, MVC also
+    /// reports "The {parameter} field is required.", which only adds noise.</param>
+    public static Dictionary<string, List<string>> TranslateErrors(
+        ModelStateDictionary modelState, IEnumerable<string> parameterNames)
+    {
+        var bodyFailed = modelState.Any(e => e.Value?.Errors.Count > 0 && (e.Key.Length == 0 || e.Key.StartsWith('$')));
+        var parameterSet = parameterNames.ToHashSet(StringComparer.Ordinal);
+
         var errors = new Dictionary<string, List<string>>();
-        foreach (var (key, entry) in context.ModelState)
+        foreach (var (key, entry) in modelState)
         {
+            if (bodyFailed && parameterSet.Contains(key)) continue;
+
             var field = FieldName(key);
             foreach (var error in entry.Errors)
             {
@@ -50,18 +78,7 @@ public static class ApiErrorMessages
                 if (!messages.Contains(message)) messages.Add(message);
             }
         }
-
-        var factory = context.HttpContext.RequestServices.GetRequiredService<ProblemDetailsFactory>();
-        var problem = factory.CreateValidationProblemDetails(
-            context.HttpContext,
-            new ModelStateDictionary(),
-            StatusCodes.Status400BadRequest,
-            title: ValidationTitle,
-            detail: ValidationDetail);
-        foreach (var (field, messages) in errors)
-            problem.Errors[field] = [.. messages];
-
-        return new BadRequestObjectResult(problem) { ContentTypes = { "application/problem+json" } };
+        return errors;
     }
 
     // "$.species", "dto.Species" or "Species" -> "species" / "Species": keep only the last segment.

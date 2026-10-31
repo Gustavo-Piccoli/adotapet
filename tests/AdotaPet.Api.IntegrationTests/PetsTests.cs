@@ -139,6 +139,7 @@ public sealed class PetsTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         Assert.Equal("Um ou mais campos são inválidos.", problem!.Title);
+        Assert.Equal("Valor inválido para o campo species.", problem.Detail);
         Assert.Contains(problem.Errors.Values.SelectMany(e => e), m => m.StartsWith("Valor inválido para o campo"));
     }
 
