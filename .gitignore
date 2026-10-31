@@ -20,3 +20,6 @@ dist/
 .env
 data/
 .superpowers/
+
+# Claude Code
+CLAUDE.md
