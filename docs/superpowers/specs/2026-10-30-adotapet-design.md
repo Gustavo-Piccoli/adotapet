@@ -1,6 +1,6 @@
 # AdotaPet — Design
 
-> Data: 2026-10-30 · Autor: Gustavo Piccoli · Status: rascunho para aprovação
+> Data: 2026-10-30 · Autor: Gustavo Piccoli · Status: aprovado (v1 implementada)
 
 ## 1. Intenção e porquê
 
@@ -26,7 +26,7 @@ O projeto precisa começar pequeno, com uma primeira versão (v1) construída em
 - Exclusão de pets, cancelamento de pedido pelo adotante, favoritos.
 
 **Anti-objetivos** (o que tornaria o projeto um fracasso mesmo funcionando)
-- Qualquer código, nome, tabela ou conceito copiado da PROCERGS/SEFAZ. O código é escrito do zero; o que se reaproveita são técnicas e padrões gerais.
+- Qualquer código, nome, tabela ou conceito copiado de projetos do empregador do autor. O código é escrito do zero; o que se reaproveita são técnicas e padrões gerais.
 - `docker compose` ou instruções do README que não funcionam numa máquina limpa: é a primeira coisa que um recrutador tenta.
 - Visual genérico ou "cara de template": o site precisa parecer um produto.
 - Arquitetura cerimoniosa sem propósito (camadas vazias, abstrações sem uso).
@@ -175,7 +175,7 @@ As credenciais de demonstração ficam no README. Isso deixa o site "vivo" logo 
 - Testes E2E com Playwright.
 
 ## 11. Decisões tomadas pelo Gustavo
-- Tema: site de adoção de animais, sem relação com a PROCERGS.
+- Tema: site de adoção de animais, sem relação com o trabalho do autor.
 - v1 só com repositório e execução local via Docker; deploy vai para o backlog.
 - Backlog em `docs/BACKLOG.md`, citado no CLAUDE.md.
 - Login de verdade, com dois tipos de conta (ONG e Adotante).

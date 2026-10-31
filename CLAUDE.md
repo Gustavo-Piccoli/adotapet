@@ -46,7 +46,7 @@ Use `npx @angular/cli@21` rather than a global Angular CLI. Shell on the dev mac
 - JWT lifetime 60 minutes, no refresh token. Claims: `sub`, `email`, `role` (`Shelter` | `Adopter`), `profile_id`, `name`.
 - Access to another shelter's pet or request returns 404, never 403. Adopter on shelter endpoints returns 403.
 - Code, identifiers, DB names and commit messages in English; all user-facing UI strings in Brazilian Portuguese (pt-BR). "Shelter" is shown as "ONG".
-- Nothing from PROCERGS/SEFAZ code, names or concepts.
+- Nothing copied from the maintainer's employer projects (code, names or concepts).
 - Development seed (`DevelopmentSeeder`) runs only in the `Development` environment; demo accounts use password `Adota123`.
 
 ## Git

@@ -34,7 +34,7 @@ docker compose up --build
 Na primeira subida a API aplica as migrations e popula dados de demonstração (apenas em `Development`, que é o ambiente usado pelo compose).
 
 - **Só para demonstração:** o compose roda a API em `Development`, com seed de contas de senha conhecida (abaixo) e chaves padrão. Não use essa configuração em produção.
-- **Espere a API subir:** na primeira execução o site pode responder 502 ou mostrar "Não foi possível carregar os pets" por cerca de 30 s, enquanto a API aplica migrations e seed. Aguarde o log `Now listening` da API e recarregue a página.
+- **Primeira subida demora cerca de 1 minuto:** a API aplica migrations e seed antes de escutar, e o compose só inicia o site (`web`) quando o healthcheck da API passa. Se o `docker compose up` ainda estiver em "waiting", é só aguardar.
 - **Senha do SA:** o volume `sqldata` guarda a senha do SA da primeira subida. Se mudar `SA_PASSWORD` depois, rode `docker compose down -v` (apaga os dados) para recomeçar.
 - **Apple Silicon:** a imagem do SQL Server é `linux/amd64`; no Docker Desktop ela roda via Rosetta/emulação (ative-a nas configurações).
 - As portas ficam presas ao loopback (`127.0.0.1`), então só a própria máquina acessa.
@@ -51,7 +51,7 @@ Senha de todas: `Adota123`
 | Adotante | `ana@adotapet.dev` |
 | Adotante | `bruno@adotapet.dev` |
 
-Os dados de exemplo incluem pets disponíveis e adotados, e pedidos nas três situações.
+Os dados de exemplo incluem pets disponíveis e adotados (com fotos reais do Unsplash, créditos em [`docs/CREDITS.md`](docs/CREDITS.md)), e pedidos nas três situações.
 
 ### Desenvolvimento sem compose
 
@@ -125,7 +125,7 @@ npm test
 npx ng build
 ```
 
-O CI (GitHub Actions, `.github/workflows/ci.yml`) roda build e testes do backend e lint, testes e build do front a cada push e pull request.
+O CI (GitHub Actions, `.github/workflows/ci.yml`) roda build e testes do backend e lint, testes e build do front a cada pull request e a cada push na `main`.
 
 ## Stack
 
@@ -138,7 +138,7 @@ O CI (GitHub Actions, `.github/workflows/ci.yml`) roda build e testes do backend
 ## Mais informações
 
 - [`docs/BACKLOG.md`](docs/BACKLOG.md): verificações pendentes, débitos técnicos, funcionalidades futuras e melhorias
-- [`docs/CREDITS.md`](docs/CREDITS.md): créditos das imagens de demonstração
+- [`docs/CREDITS.md`](docs/CREDITS.md): créditos das fotos reais (Unsplash) usadas nos pets de demonstração
 - [`docs/superpowers/specs/2026-10-30-adotapet-design.md`](docs/superpowers/specs/2026-10-30-adotapet-design.md): documento de design
 
 ## Licença
