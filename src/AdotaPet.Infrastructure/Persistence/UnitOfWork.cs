@@ -28,6 +28,9 @@ public sealed class UnitOfWork(AppDbContext db) : IUnitOfWork
         var strategy = db.Database.CreateExecutionStrategy();
         return strategy.ExecuteAsync(async token =>
         {
+            // Every attempt (including retries) must start from a clean tracker: entities from a failed
+            // attempt are stale. All callers load/create their entities inside the action, so this is safe.
+            db.ChangeTracker.Clear();
             await using var transaction = await db.Database.BeginTransactionAsync(token);
             try
             {

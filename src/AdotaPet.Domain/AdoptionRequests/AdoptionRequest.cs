@@ -17,6 +17,7 @@ public sealed class AdoptionRequest
     public AdoptionRequestStatus Status { get; private set; }
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset? DecidedAt { get; private set; }
+    public byte[] RowVersion { get; private set; } = [];
 
     public static AdoptionRequest Create(Pet pet, Guid adopterId, string message, DateTimeOffset now)
     {

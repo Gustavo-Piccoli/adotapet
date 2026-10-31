@@ -38,7 +38,10 @@ public static class DependencyInjection
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<AppDbContext>();
 
-        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .Validate(o => o.SigningKey is { Length: >= 32 }, "Jwt:SigningKey must be at least 32 characters.")
+            .ValidateOnStart();
         services.Configure<PhotoStorageOptions>(options =>
         {
             var path = configuration["Storage:PhotosPath"];

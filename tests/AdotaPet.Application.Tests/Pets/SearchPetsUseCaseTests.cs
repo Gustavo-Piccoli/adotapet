@@ -1,3 +1,4 @@
+using AdotaPet.Application.Common;
 using AdotaPet.Application.Pets.Dtos;
 using AdotaPet.Application.Pets.UseCases;
 using AdotaPet.Application.Tests.Fakes;
@@ -36,6 +37,15 @@ public class SearchPetsUseCaseTests
     }
 
     [Fact]
+    public async Task Search_HugePage_IsCappedAndReturnsEmptyItems()
+    {
+        var result = await Sut().ExecuteAsync(Query(int.MaxValue), CancellationToken.None);
+
+        Assert.Equal(Paging.MaxPage, result.Page);
+        Assert.Empty(result.Items);
+    }
+
+    [Fact]
     public async Task Search_DefaultPageSizeIs12()
     {
         var result = await Sut().ExecuteAsync(Query(), CancellationToken.None);
@@ -51,7 +61,7 @@ public class SearchPetsUseCaseTests
         var result = await Sut().ExecuteAsync(Query(), CancellationToken.None);
 
         var item = Assert.Single(result.Items);
-        Assert.Equal($"/api/pets/{pet.Id}/photo", item.PhotoUrl);
+        Assert.Equal($"/api/pets/{pet.Id}/photo?v=abc", item.PhotoUrl);
         Assert.Equal("Canoas", item.City);
         Assert.Equal("RS", item.State);
         Assert.Equal("ONG Patinhas", item.ShelterName);

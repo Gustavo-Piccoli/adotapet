@@ -8,7 +8,10 @@ namespace AdotaPet.Application.Pets;
 internal static class PetMapping
 {
     public static string? PhotoUrl(Pet pet) =>
-        pet.PhotoPath is null ? null : $"/api/pets/{pet.Id}/photo";
+        pet.PhotoPath is null
+            ? null
+            // The GUID file name changes on every upload, so the version busts the 1 h browser cache.
+            : $"/api/pets/{pet.Id}/photo?v={Path.GetFileNameWithoutExtension(pet.PhotoPath)}";
 
     public static Shelter ShelterOf(Pet pet) =>
         pet.Shelter ?? throw new InvalidOperationException("Pet loaded without its shelter.");
