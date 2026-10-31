@@ -4,7 +4,7 @@ import { Title } from '@angular/platform-browser';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { BehaviorSubject, catchError, combineLatest, of, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, catchError, combineLatest, concat, map, of, switchMap, tap } from 'rxjs';
 import { PetDetails } from '../../core/api/api.models';
 import { AdoptionRequestsApi } from '../../core/api/adoption-requests.api';
 import { PetsApi } from '../../core/api/pets.api';
@@ -85,6 +85,8 @@ import { formatPhone } from '../../shared/validators';
                   <button type="button" class="btn btn-primary" (click)="goToLogin(p)">
                     Quero adotar
                   </button>
+                } @else if (!pendingChecked()) {
+                  <div class="h-11 w-40 animate-pulse rounded-xl bg-cream-200" aria-hidden="true"></div>
                 } @else if (!formOpen()) {
                   <button type="button" class="btn btn-primary" (click)="formOpen.set(true)">
                     Quero adotar
@@ -169,6 +171,7 @@ export class PetDetailsPage {
   protected readonly notFound = signal(false);
   protected readonly failed = signal(false);
   protected readonly pending = signal(false);
+  protected readonly pendingChecked = signal(false);
   protected readonly formOpen = signal(false);
   protected readonly sending = signal(false);
 
@@ -184,6 +187,7 @@ export class PetDetailsPage {
           this.notFound.set(false);
           this.failed.set(false);
           this.pending.set(false);
+          this.pendingChecked.set(false);
           this.formOpen.set(false);
           this.form.reset();
         }),
@@ -194,27 +198,33 @@ export class PetDetailsPage {
               else this.failed.set(true);
               return of(null);
             }),
+            // Chained here so a result for a previous pet is cancelled by switchMap.
+            switchMap((pet) =>
+              pet && this.auth.isAdopter()
+                ? concat(
+                    of({ pet, pending: false, checked: false, first: true }),
+                    this.requestsApi.listMine().pipe(
+                      map((list) => list.some((r) => r.petId === pet.id && r.status === 'Pending')),
+                      catchError(() => of(false)),
+                      map((pending) => ({ pet, pending, checked: true, first: false })),
+                    ),
+                  )
+                : of({ pet, pending: false, checked: true, first: true }),
+            ),
           ),
         ),
         takeUntilDestroyed(),
       )
-      .subscribe((pet) => {
+      .subscribe(({ pet, pending, checked, first }) => {
         this.pet.set(pet);
         this.loading.set(false);
+        this.pending.set(pending);
+        this.pendingChecked.set(checked);
+        if (!first) return;
         if (pet) this.title.setTitle(`${pet.name} — AdotaPet`);
         else if (this.notFound()) this.title.setTitle('Pet não encontrado — AdotaPet');
         else this.title.setTitle('Erro ao carregar o pet — AdotaPet');
         this.announcer.announce(this.title.getTitle());
-        if (pet && this.auth.isAdopter()) this.checkPending(pet.id);
-      });
-  }
-
-  private checkPending(petId: string): void {
-    this.requestsApi
-      .listMine()
-      .pipe(catchError(() => of([])))
-      .subscribe((list) => {
-        if (list.some((r) => r.petId === petId && r.status === 'Pending')) this.pending.set(true);
       });
   }
 
