@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, of, switchMap, tap } from 'rxjs';
 import { PagedResult, PetSummary, SearchPetsParams } from '../../core/api/api.models';
 import { PetsApi } from '../../core/api/pets.api';
+import { ErrorBanner } from '../../shared/error-banner';
 import { EmptyState } from '../../shared/empty-state';
 import {
   AGE_GROUP_LABELS,
@@ -19,15 +20,15 @@ import { PetFilterValues, PetFilters } from './pet-filters';
 const PAGE_SIZE = 12;
 
 function pick<T extends string>(raw: string | null, allowed: Record<T, string>): T | undefined {
-  return raw !== null && raw in allowed ? (raw as T) : undefined;
+  return raw !== null && Object.hasOwn(allowed, raw) ? (raw as T) : undefined;
 }
 
 @Component({
   selector: 'app-pet-list-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [PetFilters, PetCard, Paginator, EmptyState],
+  imports: [PetFilters, PetCard, Paginator, EmptyState, ErrorBanner],
   template: `
-    <section class="bg-pine-900 pb-14 text-white">
+    <section class="focus-light bg-pine-900 pb-14 text-white">
       <div class="container-page py-12 sm:py-16">
         <p class="chip chip-honey mb-4">Adoção responsável</p>
         <h1 class="max-w-2xl text-4xl font-bold leading-tight sm:text-5xl">
@@ -48,10 +49,12 @@ function pick<T extends string>(raw: string | null, allowed: Record<T, string>):
       <h2 id="titulo-lista" class="mb-5 text-2xl font-bold text-pine-900">Pets para adoção</h2>
 
       @if (error()) {
-        <div class="rounded-card bg-red-50 px-5 py-4 text-red-800" role="alert">
-          Não foi possível carregar os pets. Tente novamente em instantes.
-        </div>
+        <app-error-banner
+          message="Não foi possível carregar os pets. Tente novamente em instantes."
+          (retry)="reload()"
+        />
       } @else if (!result()) {
+        <p class="sr-only" role="status">Carregando…</p>
         <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-hidden="true">
           @for (n of skeletons; track n) {
             <div class="card h-72 animate-pulse bg-cream-200"></div>
@@ -110,19 +113,25 @@ export class PetListPage {
   protected readonly loading = signal(true);
   protected readonly error = signal(false);
 
+  /** Bumped by the retry button so the same params are requested again. */
+  private readonly retryTick = signal(0);
+
   protected readonly result = toSignal<PagedResult<PetSummary> | null>(
     toObservable(
-      computed<SearchPetsParams>(() => ({
-        ...this.filters(),
-        page: this.page(),
-        pageSize: PAGE_SIZE,
+      computed(() => ({
+        params: {
+          ...this.filters(),
+          page: this.page(),
+          pageSize: PAGE_SIZE,
+        } satisfies SearchPetsParams,
+        tick: this.retryTick(),
       })),
     ).pipe(
       tap(() => {
         this.loading.set(true);
         this.error.set(false);
       }),
-      switchMap((params) =>
+      switchMap(({ params }) =>
         this.api.search(params).pipe(
           catchError(() => {
             this.error.set(true);
@@ -137,6 +146,10 @@ export class PetListPage {
     ),
     { initialValue: null },
   );
+
+  protected reload(): void {
+    this.retryTick.update((n) => n + 1);
+  }
 
   private redirectIfPastLastPage(r: PagedResult<PetSummary> | null): void {
     if (r && r.items.length === 0 && r.totalCount > 0 && this.page() > 1) {

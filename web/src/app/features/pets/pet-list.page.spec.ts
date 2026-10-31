@@ -117,6 +117,41 @@ describe('PetListPage', () => {
     expect(el.querySelector<HTMLSelectElement>('#f-size')!.value).toBe('');
   });
 
+  it('retries from the error banner', async () => {
+    await harness.navigateByUrl('/');
+    http
+      .expectOne((r) => r.url === '/api/pets')
+      .flush({}, { status: 500, statusText: 'Server Error' });
+    harness.detectChanges();
+    const el: HTMLElement = harness.routeNativeElement!;
+    expect(el.textContent).toContain('Não foi possível carregar os pets.');
+
+    Array.from(el.querySelectorAll('button'))
+      .find((b) => b.textContent?.trim() === 'Tentar novamente')!
+      .click();
+    harness.detectChanges();
+    flushList(paged([pet()]));
+    harness.detectChanges();
+    expect(el.textContent).toContain('Rex');
+    expect(el.textContent).not.toContain('Não foi possível carregar os pets.');
+  });
+
+  it('ignores prototype keys in the query string', async () => {
+    await harness.navigateByUrl('/?species=toString&sex=constructor');
+    const req = flushList(paged([pet()]));
+    expect(req.params.has('species')).toBe(false);
+    expect(req.params.has('sex')).toBe(false);
+  });
+
+  it('shows a status message while loading', async () => {
+    await harness.navigateByUrl('/');
+    harness.detectChanges();
+    expect(harness.routeNativeElement!.querySelector('[role="status"]')?.textContent).toContain(
+      'Carregando',
+    );
+    flushList(paged([pet()]));
+  });
+
   it('redirects to the last valid page when the page is out of range', async () => {
     await harness.navigateByUrl('/?page=99');
     flushList(paged([], 99, 30));

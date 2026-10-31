@@ -2,13 +2,14 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { ShelterPet } from '../../core/api/api.models';
 import { ShelterApi } from '../../core/api/shelter.api';
+import { ErrorBanner } from '../../shared/error-banner';
 import { EmptyState } from '../../shared/empty-state';
 import { AGE_GROUP_LABELS, PET_STATUS_LABELS, SPECIES_LABELS } from '../../shared/labels';
 
 @Component({
   selector: 'app-shelter-pets-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, EmptyState],
+  imports: [RouterLink, EmptyState, ErrorBanner],
   template: `
     <section class="container-page py-8">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -17,11 +18,14 @@ import { AGE_GROUP_LABELS, PET_STATUS_LABELS, SPECIES_LABELS } from '../../share
       </div>
 
       @if (loading()) {
+        <p class="sr-only" role="status">Carregando…</p>
         <div class="card mt-6 h-32 animate-pulse bg-cream-200" aria-hidden="true"></div>
       } @else if (failed()) {
-        <div class="mt-6 rounded-card bg-red-50 px-5 py-4 text-red-800" role="alert">
-          Não foi possível carregar seus pets. Tente novamente em instantes.
-        </div>
+        <app-error-banner
+          class="mt-6 block"
+          message="Não foi possível carregar seus pets. Tente novamente em instantes."
+          (retry)="load()"
+        />
       } @else if (pets().length === 0) {
         <div class="mt-6">
           <app-empty-state message="Você ainda não cadastrou nenhum pet.">
@@ -60,8 +64,16 @@ export class ShelterPetsPage {
   protected readonly loading = signal(true);
   protected readonly failed = signal(false);
 
+  private readonly api = inject(ShelterApi);
+
   constructor() {
-    inject(ShelterApi)
+    this.load();
+  }
+
+  protected load(): void {
+    this.loading.set(true);
+    this.failed.set(false);
+    this.api
       .listPets()
       .subscribe({
         next: (list) => {
