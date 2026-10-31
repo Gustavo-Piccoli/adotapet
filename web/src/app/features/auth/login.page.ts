@@ -5,12 +5,12 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { roleHome, safeReturnUrl } from '../../core/auth/redirect';
 import { ToastService } from '../../core/toast/toast.service';
-import { FieldError } from '../../shared/field-error';
+import { FieldA11y, FieldError } from '../../shared/field-error';
 
 @Component({
   selector: 'app-login-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, FieldError],
+  imports: [ReactiveFormsModule, RouterLink, FieldError, FieldA11y],
   template: `
     <section class="container-page py-10 sm:py-14">
       <div class="card mx-auto max-w-md p-6 sm:p-8">

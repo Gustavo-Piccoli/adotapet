@@ -26,6 +26,9 @@
   --color-pine-700: #1f5440;
   --color-pine-900: #14332a;
 
+  --color-success-100: #c8ebcc;
+  --color-success-700: #14532d;
+
   --color-honey-100: #fbebc2;
   --color-honey-500: #e8a317;
 
@@ -53,6 +56,10 @@
   :focus-visible {
     outline: 3px solid var(--color-pine-700);
     outline-offset: 2px;
+  }
+  /* pine-700 is nearly invisible on pine-900: dark sections opt in to a honey ring (>= 7:1). */
+  .focus-light :focus-visible {
+    outline-color: var(--color-honey-500);
   }
   @media (prefers-reduced-motion: reduce) {
     * {
@@ -99,6 +106,9 @@
   }
   .chip-clay {
     @apply bg-clay-50 text-clay-700;
+  }
+  .chip-success {
+    @apply bg-success-100 text-success-700;
   }
   .chip-honey {
     @apply bg-honey-100 text-ink;
