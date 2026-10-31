@@ -3,19 +3,13 @@
 > **English summary:** AdotaPet is a full-stack pet adoption site (ASP.NET Core 10 + Angular 21 + SQL Server) built as a portfolio project. Shelters publish pets, adopters send adoption requests, and shelters approve or reject them.
 > It runs with a single `docker compose up --build` and ships with demo data, Clean Architecture, role-based JWT auth, and automated tests with CI.
 
+> **Status:** o `docker compose`, o CI e os testes de integração ainda não foram verificados em uma execução real (o Docker ainda não estava instalado na máquina de desenvolvimento). Veja "Pending verification" em [`docs/BACKLOG.md`](docs/BACKLOG.md).
+
 Site de adoção de animais: **ONGs** publicam pets disponíveis e **adotantes** enviam pedidos de adoção, que a ONG aprova ou recusa. Projeto de portfólio de Gustavo Piccoli, feito na stack .NET / Angular / SQL Server.
 
 ## Capturas de tela
 
-As imagens serão adicionadas em `docs/images/` (pendente, ver [`docs/BACKLOG.md`](docs/BACKLOG.md)):
-
-| Vitrine | Página do pet |
-|---|---|
-| `docs/images/vitrine.png` | `docs/images/pet.png` |
-
-| Meus pets (ONG) | Pedidos recebidos (ONG) |
-|---|---|
-| `docs/images/ong-pets.png` | `docs/images/ong-pedidos.png` |
+Capturas de tela em breve (ver [`docs/BACKLOG.md`](docs/BACKLOG.md)).
 
 ## Funcionalidades
 
@@ -37,7 +31,14 @@ docker compose up --build
 - API: <http://localhost:5080> (documentação interativa Scalar: <http://localhost:5080/scalar>)
 - SQL Server: `localhost:1433`
 
-Na primeira subida a API aplica as migrations e popula dados de demonstração (apenas em `Development`, que é o ambiente usado pelo compose). Os valores padrão de senha do SA e chave JWT servem só para uso local; para trocá-los, copie `.env.example` para `.env`.
+Na primeira subida a API aplica as migrations e popula dados de demonstração (apenas em `Development`, que é o ambiente usado pelo compose).
+
+- **Só para demonstração:** o compose roda a API em `Development`, com seed de contas de senha conhecida (abaixo) e chaves padrão. Não use essa configuração em produção.
+- **Espere a API subir:** na primeira execução o site pode responder 502 ou mostrar "Não foi possível carregar os pets" por cerca de 30 s, enquanto a API aplica migrations e seed. Aguarde o log `Now listening` da API e recarregue a página.
+- **Senha do SA:** o volume `sqldata` guarda a senha do SA da primeira subida. Se mudar `SA_PASSWORD` depois, rode `docker compose down -v` (apaga os dados) para recomeçar.
+- **Apple Silicon:** a imagem do SQL Server é `linux/amd64`; no Docker Desktop ela roda via Rosetta/emulação (ative-a nas configurações).
+- As portas ficam presas ao loopback (`127.0.0.1`), então só a própria máquina acessa.
+- Para trocar as senhas padrão do SA e a chave JWT, copie `.env.example` para `.env`.
 
 ### Contas de demonstração
 
@@ -57,6 +58,7 @@ Os dados de exemplo incluem pets disponíveis e adotados, e pedidos nas três si
 Requer .NET SDK 10, Node 24 e um SQL Server acessível (a connection string de `appsettings.Development.json` aponta para `localhost,1433`).
 
 ```bash
+docker compose up -d sqlserver             # só o banco
 dotnet run --project src/AdotaPet.Api      # API em http://localhost:5080
 cd web && npm ci && npm start              # SPA em http://localhost:4200, com proxy de /api para a porta 5080
 ```
@@ -93,7 +95,7 @@ Cada projeto é organizado por funcionalidade (`Pets/`, `AdoptionRequests/`, `Sh
 - **Casos de uso como interface + classe, sem MediatR:** menos cerimônia para este tamanho, e o registro explícito no DI deixa o fluxo fácil de seguir.
 - **Regras nas entidades:** as entidades se validam e lançam exceções de domínio; a API as traduz em `ProblemDetails` (400, 404, 409).
 - **Um pedido pendente por adotante e pet:** garantido no domínio e no banco, com índice único filtrado. Depois de uma recusa o adotante pode pedir de novo.
-- **Aprovação transacional com concorrência otimista:** aprovar o pedido, marcar o pet como adotado e recusar os demais acontece numa transação; `RowVersion` no pet impede que duas aprovações simultâneas vençam (a perdedora recebe 409).
+- **Aprovação transacional com concorrência otimista:** aprovar o pedido, marcar o pet como adotado e recusar os demais acontece numa transação; `RowVersion` no pet e no pedido impede que duas decisões simultâneas vençam (a perdedora recebe 409).
 - **Acesso a dado de outra ONG retorna 404**, para não revelar que o recurso existe; adotante chamando rotas de ONG recebe 403.
 - **Identity + JWT:** ASP.NET Core Identity guarda usuários e senhas; o login emite um JWT de 60 minutos com papel e id do perfil. O cadastro cria usuário e perfil numa única transação. O Domain guarda apenas o `UserId`.
 - **Upload de foto seguro:** só JPEG, PNG e WebP, identificados pela assinatura do arquivo (não pela extensão), até 5 MB, salvos com nome GUID gerado no servidor, atrás da interface `IPhotoStorage`.
