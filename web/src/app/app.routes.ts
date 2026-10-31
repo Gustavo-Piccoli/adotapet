@@ -11,6 +11,7 @@ export const routes: Routes = [
   {
     path: 'pets/:id',
     title: 'Pet — AdotaPet',
+    data: { announcesItself: true },
     loadComponent: () => import('./features/pets/pet-details.page').then((m) => m.PetDetailsPage),
   },
   {

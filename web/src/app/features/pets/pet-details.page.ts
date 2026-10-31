@@ -9,6 +9,7 @@ import { PetDetails } from '../../core/api/api.models';
 import { AdoptionRequestsApi } from '../../core/api/adoption-requests.api';
 import { PetsApi } from '../../core/api/pets.api';
 import { AuthService } from '../../core/auth/auth.service';
+import { RouteAnnouncer } from '../../core/title/route-announcer';
 import { ProblemDetails } from '../../core/http/problem-details';
 import { ToastService } from '../../core/toast/toast.service';
 import { ErrorBanner } from '../../shared/error-banner';
@@ -154,6 +155,7 @@ export class PetDetailsPage {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   private readonly title = inject(Title);
+  private readonly announcer = inject(RouteAnnouncer);
   protected readonly reload$ = new BehaviorSubject<void>(undefined);
 
   protected readonly phone = formatPhone;
@@ -200,6 +202,7 @@ export class PetDetailsPage {
         this.pet.set(pet);
         this.loading.set(false);
         if (pet) this.title.setTitle(`${pet.name} — AdotaPet`);
+        this.announcer.announce(this.title.getTitle());
         if (pet && this.auth.isAdopter()) this.checkPending(pet.id);
       });
   }

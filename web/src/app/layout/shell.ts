@@ -4,13 +4,13 @@ import {
   DestroyRef,
   ElementRef,
   inject,
-  signal,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterOutlet, TitleStrategy } from '@angular/router';
+import { Data, NavigationEnd, Router, RouterOutlet, TitleStrategy } from '@angular/router';
 import { filter, map, pairwise, startWith } from 'rxjs';
 import { DEFAULT_TITLE } from '../core/title/app-title-strategy';
+import { RouteAnnouncer } from '../core/title/route-announcer';
 import { Footer } from './footer';
 import { Header } from './header';
 
@@ -34,7 +34,7 @@ import { Header } from './header';
       <app-footer />
     </div>
     <div class="sr-only" role="status" aria-live="polite" data-testid="route-announcer">
-      {{ announcement() }}
+      {{ announcer.message() }}
     </div>
   `,
 })
@@ -43,7 +43,7 @@ export class Shell {
   private readonly titleStrategy = inject(TitleStrategy);
   private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
 
-  protected readonly announcement = signal('');
+  protected readonly announcer = inject(RouteAnnouncer);
 
   constructor() {
     // On a real page change (path differs), move focus to <main> and announce the new page.
@@ -58,12 +58,21 @@ export class Shell {
         takeUntilDestroyed(inject(DestroyRef)),
       )
       .subscribe(() => {
-        // The router has not written document.title yet at NavigationEnd, so resolve it from the route.
-        this.announcement.set(
-          this.titleStrategy.buildTitle(this.router.routerState.snapshot) ?? DEFAULT_TITLE,
-        );
+        // Pages that load their title asynchronously (pet details) announce it themselves.
+        if (!this.leafData()['announcesItself']) {
+          // The router has not written document.title yet at NavigationEnd, so resolve it from the route.
+          this.announcer.announce(
+            this.titleStrategy.buildTitle(this.router.routerState.snapshot) ?? DEFAULT_TITLE,
+          );
+        }
         this.main().nativeElement.focus({ preventScroll: true });
       });
+  }
+
+  private leafData(): Data {
+    let route = this.router.routerState.snapshot.root;
+    while (route.firstChild) route = route.firstChild;
+    return route.data;
   }
 
   protected skipToContent(event: Event, main: HTMLElement): void {

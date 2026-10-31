@@ -29,8 +29,15 @@ import {
         <p id="confirm-dialog-message" class="text-ink">{{ message() }}</p>
         <div class="mt-5 flex justify-end gap-2">
           <button type="button" class="btn btn-ghost" (click)="cancelled.emit()">Cancelar</button>
-          <button #confirmButton type="button" class="btn btn-primary" (click)="confirmed.emit()">
-            Continuar
+          <button
+            #confirmButton
+            type="button"
+            class="btn"
+            [class.btn-primary]="!danger()"
+            [class.btn-danger]="danger()"
+            (click)="confirmed.emit()"
+          >
+            {{ confirmLabel() }}
           </button>
         </div>
       </div>
@@ -39,6 +46,8 @@ import {
 })
 export class ConfirmDialog {
   readonly message = input.required<string>();
+  readonly confirmLabel = input('Continuar');
+  readonly danger = input(false);
   readonly confirmed = output<void>();
   readonly cancelled = output<void>();
 
