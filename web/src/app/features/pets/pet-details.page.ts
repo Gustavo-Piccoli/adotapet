@@ -202,6 +202,8 @@ export class PetDetailsPage {
         this.pet.set(pet);
         this.loading.set(false);
         if (pet) this.title.setTitle(`${pet.name} — AdotaPet`);
+        else if (this.notFound()) this.title.setTitle('Pet não encontrado — AdotaPet');
+        else this.title.setTitle('Erro ao carregar o pet — AdotaPet');
         this.announcer.announce(this.title.getTitle());
         if (pet && this.auth.isAdopter()) this.checkPending(pet.id);
       });
