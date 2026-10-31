@@ -280,8 +280,8 @@ describe('PetDetailsPage', () => {
     try {
       await open();
       vi.advanceTimersByTime(60);
-      expect(document.title).toBe('Rex — AdotaPet');
-      expect(TestBed.inject(RouteAnnouncer).message()).toBe('Rex — AdotaPet');
+      expect(document.title).toBe('Rex — AdotPet');
+      expect(TestBed.inject(RouteAnnouncer).message()).toBe('Rex — AdotPet');
     } finally {
       vi.useRealTimers();
     }
@@ -294,12 +294,12 @@ describe('PetDetailsPage', () => {
       await harness.navigateByUrl('/pets/p1');
       http.expectOne('/api/pets/p1').flush({}, { status: 404, statusText: 'Not Found' });
       vi.advanceTimersByTime(60);
-      expect(announcer.message()).toBe('Pet não encontrado — AdotaPet');
+      expect(announcer.message()).toBe('Pet não encontrado — AdotPet');
 
       await harness.navigateByUrl('/pets/p2');
       http.expectOne('/api/pets/p2').flush({}, { status: 500, statusText: 'Server Error' });
       vi.advanceTimersByTime(60);
-      expect(announcer.message()).toBe('Erro ao carregar o pet — AdotaPet');
+      expect(announcer.message()).toBe('Erro ao carregar o pet — AdotPet');
     } finally {
       vi.useRealTimers();
     }

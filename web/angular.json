@@ -9,7 +9,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "adotapet-web": {
+    "adotpet-web": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -59,10 +59,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "adotapet-web:build:production"
+              "buildTarget": "adotpet-web:build:production"
             },
             "development": {
-              "buildTarget": "adotapet-web:build:development"
+              "buildTarget": "adotpet-web:build:development"
             }
           },
           "defaultConfiguration": "development",

@@ -2,7 +2,7 @@
 
 ## Fotos dos pets do seed
 
-As 12 imagens em `src/AdotaPet.Infrastructure/Seed/photos/` (`pet-01.jpg` a `pet-12.jpg`) são
+As 12 imagens em `src/AdotPet.Infrastructure/Seed/photos/` (`pet-01.jpg` a `pet-12.jpg`) são
 fotografias reais publicadas no [Unsplash](https://unsplash.com) sob a
 [Unsplash License](https://unsplash.com/license), que permite uso, modificação e redistribuição
 gratuitos, inclusive em repositórios públicos, sem exigir atribuição. Os créditos abaixo são

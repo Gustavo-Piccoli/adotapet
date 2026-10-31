@@ -14,7 +14,7 @@ import { PawIcon } from '../shared/paw-icon';
           <span class="grid size-9 place-items-center rounded-full bg-clay-600 text-white">
             <app-paw-icon class="size-5" />
           </span>
-          AdotaPet
+          AdotPet
         </a>
         <nav aria-label="Principal" class="flex flex-wrap items-center gap-1">
           @if (auth.isShelter()) {

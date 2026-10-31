@@ -221,9 +221,9 @@ export class PetDetailsPage {
         this.pending.set(pending);
         this.pendingChecked.set(checked);
         if (!first) return;
-        if (pet) this.title.setTitle(`${pet.name} — AdotaPet`);
-        else if (this.notFound()) this.title.setTitle('Pet não encontrado — AdotaPet');
-        else this.title.setTitle('Erro ao carregar o pet — AdotaPet');
+        if (pet) this.title.setTitle(`${pet.name} — AdotPet`);
+        else if (this.notFound()) this.title.setTitle('Pet não encontrado — AdotPet');
+        else this.title.setTitle('Erro ao carregar o pet — AdotPet');
         this.announcer.announce(this.title.getTitle());
       });
   }

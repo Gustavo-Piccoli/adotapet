@@ -1,0 +1,31 @@
+using AdotPet.Application.Accounts.UseCases;
+using AdotPet.Application.AdoptionRequests.UseCases;
+using AdotPet.Application.Pets.UseCases;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace AdotPet.Application;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddApplication(this IServiceCollection services)
+    {
+        services.AddScoped<ISearchPetsUseCase, SearchPetsUseCase>();
+        services.AddScoped<IGetPetDetailsUseCase, GetPetDetailsUseCase>();
+        services.AddScoped<IListShelterPetsUseCase, ListShelterPetsUseCase>();
+        services.AddScoped<IGetShelterPetUseCase, GetShelterPetUseCase>();
+        services.AddScoped<ICreatePetUseCase, CreatePetUseCase>();
+        services.AddScoped<IUpdatePetUseCase, UpdatePetUseCase>();
+        services.AddScoped<IUploadPetPhotoUseCase, UploadPetPhotoUseCase>();
+        services.AddScoped<IGetPetPhotoUseCase, GetPetPhotoUseCase>();
+        services.AddScoped<ICreateAdoptionRequestUseCase, CreateAdoptionRequestUseCase>();
+        services.AddScoped<IListAdopterRequestsUseCase, ListAdopterRequestsUseCase>();
+        services.AddScoped<IListShelterRequestsUseCase, ListShelterRequestsUseCase>();
+        services.AddScoped<IApproveAdoptionRequestUseCase, ApproveAdoptionRequestUseCase>();
+        services.AddScoped<IRejectAdoptionRequestUseCase, RejectAdoptionRequestUseCase>();
+        services.AddScoped<IRegisterShelterUseCase, RegisterShelterUseCase>();
+        services.AddScoped<IRegisterAdopterUseCase, RegisterAdopterUseCase>();
+        services.AddScoped<ILoginUseCase, LoginUseCase>();
+        services.AddScoped<IGetMeUseCase, GetMeUseCase>();
+        return services;
+    }
+}

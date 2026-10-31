@@ -16,14 +16,14 @@ describe('Shell route focus', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([
-          { path: 'a', title: 'Página A — AdotaPet', component: Page },
+          { path: 'a', title: 'Página A — AdotPet', component: Page },
           {
             path: 'p/:id',
-            title: 'Pet — AdotaPet',
+            title: 'Pet — AdotPet',
             data: { announcesItself: true },
             component: Page,
           },
-          { path: 'b', title: 'Página B — AdotaPet', component: Page },
+          { path: 'b', title: 'Página B — AdotPet', component: Page },
         ]),
       ],
     });
@@ -59,16 +59,16 @@ describe('Shell route focus', () => {
       await harness.navigateByUrl('/a');
       await harness.navigateByUrl('/b');
       vi.advanceTimersByTime(60);
-      expect(announcer.message()).toBe('Página B — AdotaPet');
+      expect(announcer.message()).toBe('Página B — AdotPet');
 
-      announcer.announce('Página B — AdotaPet');
+      announcer.announce('Página B — AdotPet');
       expect(announcer.message()).toBe(''); // cleared first, so the repeat is announced again
       vi.advanceTimersByTime(60);
-      expect(announcer.message()).toBe('Página B — AdotaPet');
+      expect(announcer.message()).toBe('Página B — AdotPet');
 
       await harness.navigateByUrl('/p/1');
       vi.advanceTimersByTime(60);
-      expect(announcer.message()).toBe('Página B — AdotaPet'); // untouched: the page announces itself
+      expect(announcer.message()).toBe('Página B — AdotPet'); // untouched: the page announces itself
     } finally {
       vi.useRealTimers();
     }

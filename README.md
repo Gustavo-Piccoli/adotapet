@@ -1,6 +1,6 @@
-# AdotaPet
+# AdotPet
 
-> **English summary:** AdotaPet is a full-stack pet adoption site (ASP.NET Core 10 + Angular 21 + SQL Server) built as a portfolio project. Shelters publish pets, adopters send adoption requests, and shelters approve or reject them.
+> **English summary:** AdotPet is a full-stack pet adoption site (ASP.NET Core 10 + Angular 21 + SQL Server) built as a portfolio project. Shelters publish pets, adopters send adoption requests, and shelters approve or reject them.
 > It runs with a single `docker compose up --build` and ships with demo data, Clean Architecture, role-based JWT auth, and automated tests with CI.
 
 > **Status:** o `docker compose`, os 19 testes de integração da API (Testcontainers) e o fluxo completo no navegador (visitante, adotante e ONG) foram verificados localmente em 2026-10-31, e o CI do GitHub Actions passa (backend com testes de integração e front).
@@ -61,10 +61,10 @@ Senha de todas: `Adota123`
 
 | Papel | E-mail |
 |---|---|
-| ONG | `abrigo@adotapet.dev` (Abrigo Patas Felizes, Porto Alegre/RS) |
-| ONG | `ong@adotapet.dev` (ONG Focinhos do Bem, Curitiba/PR) |
-| Adotante | `ana@adotapet.dev` |
-| Adotante | `bruno@adotapet.dev` |
+| ONG | `abrigo@adotpet.dev` (Abrigo Patas Felizes, Porto Alegre/RS) |
+| ONG | `ong@adotpet.dev` (ONG Focinhos do Bem, Curitiba/PR) |
+| Adotante | `ana@adotpet.dev` |
+| Adotante | `bruno@adotpet.dev` |
 
 Os dados de exemplo incluem pets disponíveis e adotados (com fotos reais do Unsplash, créditos em [`docs/CREDITS.md`](docs/CREDITS.md)), e pedidos nas três situações.
 
@@ -74,7 +74,7 @@ Requer .NET SDK 10, Node 24 e um SQL Server acessível (a connection string de `
 
 ```bash
 docker compose up -d sqlserver             # só o banco
-dotnet run --project src/AdotaPet.Api      # API em http://localhost:5080
+dotnet run --project src/AdotPet.Api      # API em http://localhost:5080
 cd web && npm ci && npm start              # SPA em http://localhost:4200, com proxy de /api para a porta 5080
 ```
 
@@ -83,10 +83,10 @@ cd web && npm ci && npm start              # SPA em http://localhost:4200, com p
 ```mermaid
 flowchart LR
     Browser["Navegador"] --> Web["web: Angular 21 + nginx"]
-    Web -->|"/api (proxy)"| Api["AdotaPet.Api"]
-    Api --> App["AdotaPet.Application"]
-    App --> Domain["AdotaPet.Domain"]
-    Infra["AdotaPet.Infrastructure"] --> App
+    Web -->|"/api (proxy)"| Api["AdotPet.Api"]
+    Api --> App["AdotPet.Application"]
+    App --> Domain["AdotPet.Domain"]
+    Infra["AdotPet.Infrastructure"] --> App
     Api --> Infra
     Infra --> Db[("SQL Server")]
     Infra --> Photos[("Fotos em disco (volume)")]
@@ -96,10 +96,10 @@ As dependências entre projetos apontam para dentro (`Domain ← Application ←
 
 | Projeto | Responsabilidade |
 |---|---|
-| `AdotaPet.Domain` | Entidades, enums, regras e exceções de domínio, interfaces de repositório |
-| `AdotaPet.Application` | Casos de uso (interface + implementação), DTOs, interfaces de serviços técnicos |
-| `AdotaPet.Infrastructure` | EF Core e migrations, Identity, emissão de JWT, armazenamento de fotos, seed |
-| `AdotaPet.Api` | Controllers, autenticação/autorização, `ProblemDetails`, OpenAPI + Scalar |
+| `AdotPet.Domain` | Entidades, enums, regras e exceções de domínio, interfaces de repositório |
+| `AdotPet.Application` | Casos de uso (interface + implementação), DTOs, interfaces de serviços técnicos |
+| `AdotPet.Infrastructure` | EF Core e migrations, Identity, emissão de JWT, armazenamento de fotos, seed |
+| `AdotPet.Api` | Controllers, autenticação/autorização, `ProblemDetails`, OpenAPI + Scalar |
 | `web/` | SPA Angular (componentes standalone, signals, Tailwind CSS) |
 
 Cada projeto é organizado por funcionalidade (`Pets/`, `AdoptionRequests/`, `Shelters/`, `Adopters/`, `Accounts/`), com o aspecto técnico em subpastas.
@@ -123,15 +123,15 @@ Débitos conhecidos (por exemplo, token em `localStorage` e ausência de refresh
 ## Testes
 
 ```bash
-dotnet build AdotaPet.sln
+dotnet build AdotPet.sln
 
 # Unitários (não precisam de Docker)
-dotnet test tests/AdotaPet.Domain.Tests
-dotnet test tests/AdotaPet.Application.Tests
-dotnet test tests/AdotaPet.Infrastructure.Tests
+dotnet test tests/AdotPet.Domain.Tests
+dotnet test tests/AdotPet.Application.Tests
+dotnet test tests/AdotPet.Infrastructure.Tests
 
 # Integração da API (precisa de Docker, usa Testcontainers com SQL Server)
-dotnet test tests/AdotaPet.Api.IntegrationTests
+dotnet test tests/AdotPet.Api.IntegrationTests
 
 # Front
 cd web
@@ -154,7 +154,7 @@ O CI (GitHub Actions, `.github/workflows/ci.yml`) roda build e testes do backend
 
 - [`docs/BACKLOG.md`](docs/BACKLOG.md): verificações pendentes, débitos técnicos, funcionalidades futuras e melhorias
 - [`docs/CREDITS.md`](docs/CREDITS.md): créditos das fotos reais (Unsplash) usadas nos pets de demonstração
-- [`docs/superpowers/specs/2026-10-30-adotapet-design.md`](docs/superpowers/specs/2026-10-30-adotapet-design.md): documento de design
+- [`docs/superpowers/specs/2026-10-30-adotpet-design.md`](docs/superpowers/specs/2026-10-30-adotpet-design.md): documento de design
 
 ## Licença
 

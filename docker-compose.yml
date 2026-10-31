@@ -19,10 +19,10 @@ services:
   api:
     build:
       context: .
-      dockerfile: src/AdotaPet.Api/Dockerfile
+      dockerfile: src/AdotPet.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__Default: "Server=sqlserver,1433;Database=AdotaPet;User Id=sa;Password=${SA_PASSWORD:-Your_strong_password123};TrustServerCertificate=True"
+      ConnectionStrings__Default: "Server=sqlserver,1433;Database=AdotPet;User Id=sa;Password=${SA_PASSWORD:-Your_strong_password123};TrustServerCertificate=True"
       Jwt__SigningKey: ${JWT_SIGNING_KEY:-dev-only-signing-key-change-me-0123456789abcdef}
       Storage__PhotosPath: /data/photos
     ports:

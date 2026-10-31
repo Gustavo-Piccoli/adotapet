@@ -3,7 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { AuthResult, LoginDto, RegisterAdopterDto, RegisterShelterDto } from './auth.models';
 
-export const SESSION_STORAGE_KEY = 'adotapet.session';
+export const SESSION_STORAGE_KEY = 'adotpet.session';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
