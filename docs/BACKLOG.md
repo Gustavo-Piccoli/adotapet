@@ -6,7 +6,7 @@ Single source of truth for pending work. Keep it updated here (see `CLAUDE.md`).
 
 Written and compiled, but not yet run because Docker is not installed on the development machine.
 
-- [ ] Run the API integration tests (`dotnet test tests/AdotaPet.Api.IntegrationTests`, 12 tests, need Docker/Testcontainers).
+- [ ] Run the API integration tests (`dotnet test tests/AdotaPet.Api.IntegrationTests`, 16 tests, need Docker/Testcontainers).
 - [ ] Run `docker compose config` and `docker compose up --build` on a clean machine; confirm the site at `http://localhost:4200` and Scalar at `http://localhost:5080/scalar`.
 - [ ] Manual end-to-end check of all flows: visitor, adopter (request, duplicate request, my requests) and shelter (create/edit pet, photo upload, approve, reject).
 - [ ] Confirm the 413 "A foto deve ter no máximo 5 MB." path on real Kestrel/nginx. The integration tests use TestServer, which does not enforce `RequestSizeLimit`, so they only cover the 400 path.
@@ -24,7 +24,6 @@ Written and compiled, but not yet run because Docker is not installed on the dev
 - `PetRepository.SearchAvailableAsync` has no page guard of its own (only the use case clamps; `Paging.MaxPage` caps the page).
 - The concurrency conflict message says "pedido" for any concurrency conflict (the pet `RowVersion` conflict reuses it).
 - Race: creating a new pending request for a pet while another request for it is being approved is not guarded (approval only rejects the pending requests it sees).
-- Automatic `[ApiController]` 400 responses (model binding) are in English, not pt-BR.
 - No login brute-force protection (lockout or rate limiting).
 - Photo cleanup of the previous file can fail silently on a Windows file lock.
 - `IdentityService` has an unused cancellation token.
