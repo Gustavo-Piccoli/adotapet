@@ -1,5 +1,16 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterOutlet, TitleStrategy } from '@angular/router';
+import { filter, map, pairwise, startWith } from 'rxjs';
+import { DEFAULT_TITLE } from '../core/title/app-title-strategy';
 import { Footer } from './footer';
 import { Header } from './header';
 
@@ -17,14 +28,44 @@ import { Header } from './header';
     </a>
     <div class="flex min-h-screen flex-col">
       <app-header />
-      <main #main id="conteudo" tabindex="-1" class="flex-1">
+      <main #main id="conteudo" tabindex="-1" class="flex-1 outline-none">
         <router-outlet />
       </main>
       <app-footer />
     </div>
+    <div class="sr-only" role="status" aria-live="polite" data-testid="route-announcer">
+      {{ announcement() }}
+    </div>
   `,
 })
 export class Shell {
+  private readonly router = inject(Router);
+  private readonly titleStrategy = inject(TitleStrategy);
+  private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
+
+  protected readonly announcement = signal('');
+
+  constructor() {
+    // On a real page change (path differs), move focus to <main> and announce the new page.
+    // Query-param-only changes (filters, paging) keep focus where the user is.
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        map((e) => e.urlAfterRedirects.split(/[?#]/)[0]),
+        startWith(null),
+        pairwise(),
+        filter(([previous, current]) => previous !== null && previous !== current),
+        takeUntilDestroyed(inject(DestroyRef)),
+      )
+      .subscribe(() => {
+        // The router has not written document.title yet at NavigationEnd, so resolve it from the route.
+        this.announcement.set(
+          this.titleStrategy.buildTitle(this.router.routerState.snapshot) ?? DEFAULT_TITLE,
+        );
+        this.main().nativeElement.focus({ preventScroll: true });
+      });
+  }
+
   protected skipToContent(event: Event, main: HTMLElement): void {
     event.preventDefault();
     main.focus();
