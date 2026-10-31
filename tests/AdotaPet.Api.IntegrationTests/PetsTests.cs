@@ -1,9 +1,11 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using AdotaPet.Application.Accounts;
 using AdotaPet.Application.Pets.Dtos;
 using AdotaPet.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AdotaPet.Api.IntegrationTests;
 
@@ -75,9 +77,10 @@ public sealed class PetsTests(ApiFactory factory)
     [Fact]
     public async Task Upload_above_6_MB_is_rejected_with_size_message()
     {
-        // Under Kestrel, [RequestSizeLimit(6 MB)] answers 413 with the same pt-BR detail. TestServer does not
-        // implement IHttpMaxRequestBodySizeFeature, so the attribute cannot be enforced here and the use
-        // case's own 5 MB check answers 400 instead. The 413 path needs a real Kestrel host to be exercised.
+        // Under Kestrel, [RequestSizeLimit(6 MB)] makes reading the form throw BadHttpRequestException(413),
+        // which DomainExceptionHandler turns into a 413 with the same pt-BR detail. TestServer has no
+        // IHttpMaxRequestBodySizeFeature, so the limit is never enforced here and the use case's own 5 MB
+        // check answers 400 instead: this test cannot observe the 413 (it needs a real Kestrel host).
         var shelter = await TestAuth.RegisterShelterAsync(factory);
         var petId = await TestAuth.CreatePetAsync(shelter);
         var bytes = PngPaddedTo(7 * 1024 * 1024);
@@ -109,5 +112,47 @@ public sealed class PetsTests(ApiFactory factory)
         var response = await adopter.GetAsync("/api/shelter/pets");
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task City_filter_ignores_case_and_accents_and_matches_prefix()
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..8];
+        var shelter = await TestAuth.RegisterShelterAsync(factory, $"São José {suffix}");
+        var petId = await TestAuth.CreatePetAsync(shelter);
+
+        var list = await shelter.GetFromJsonAsync<PagedResult<PetSummaryDto>>(
+            $"/api/pets?state=RS&city=sao%20jose%20{suffix[..4]}&pageSize=48", TestAuth.Json);
+
+        Assert.Contains(list!.Items, p => p.Id == petId);
+    }
+
+    [Fact]
+    public async Task Invalid_enum_value_returns_pt_BR_validation_problem()
+    {
+        var shelter = await TestAuth.RegisterShelterAsync(factory);
+
+        var response = await shelter.PostAsJsonAsync("/api/shelter/pets",
+            new { name = "Rex", species = "Dragon", sex = "Male", size = "Medium", ageGroup = "Adult",
+                  isNeutered = true, isVaccinated = true, description = "Dócil" }, TestAuth.Json);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        Assert.Equal("Um ou mais campos são inválidos.", problem!.Title);
+        Assert.Contains(problem.Errors.Values.SelectMany(e => e), m => m.StartsWith("Valor inválido para o campo"));
+    }
+
+    [Fact]
+    public async Task Token_of_a_profile_that_no_longer_exists_returns_401()
+    {
+        // Same shape as a token issued before a database reset: valid signature, unknown profile_id.
+        var token = factory.Services.GetRequiredService<ITokenService>().CreateToken(
+            Guid.NewGuid().ToString(), "fantasma@teste.com", Roles.Shelter, Guid.NewGuid(), "Fantasma").AccessToken;
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var response = await client.PostAsJsonAsync("/api/shelter/pets", TestAuth.NewPet(), TestAuth.Json);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 }
