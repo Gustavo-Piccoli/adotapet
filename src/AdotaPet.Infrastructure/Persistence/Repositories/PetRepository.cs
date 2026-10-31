@@ -6,6 +6,8 @@ namespace AdotaPet.Infrastructure.Persistence.Repositories;
 
 public sealed class PetRepository(AppDbContext db) : IPetRepository
 {
+    private const string CityCollation = "Latin1_General_CI_AI";
+
     public Task<Pet?> GetByIdAsync(Guid id, CancellationToken ct) =>
         db.Pets.Include(p => p.Shelter).FirstOrDefaultAsync(p => p.Id == id, ct);
 
@@ -26,7 +28,8 @@ public sealed class PetRepository(AppDbContext db) : IPetRepository
         if (!string.IsNullOrWhiteSpace(criteria.City))
         {
             var city = criteria.City.Trim();
-            query = query.Where(p => p.Shelter!.City == city);
+            // Accent- and case-insensitive prefix match ("sao" finds "São Paulo"); the default collation is CI_AS.
+            query = query.Where(p => EF.Functions.Collate(p.Shelter!.City, CityCollation).StartsWith(city));
         }
 
         var total = await query.CountAsync(ct);

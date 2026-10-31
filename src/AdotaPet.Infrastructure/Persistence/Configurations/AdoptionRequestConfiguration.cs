@@ -32,6 +32,10 @@ public sealed class AdoptionRequestConfiguration : IEntityTypeConfiguration<Adop
             .HasFilter("[Status] = 'Pending'")
             .HasDatabaseName(PendingUniqueIndexName);
 
+        // The filtered unique index above does not serve plain AdopterId lookups (and suppresses EF's FK index),
+        // so cover "my requests" (filter by adopter, newest first) explicitly.
+        builder.HasIndex(r => new { r.AdopterId, r.CreatedAt });
+
         builder.HasIndex(r => new { r.PetId, r.Status });
     }
 }

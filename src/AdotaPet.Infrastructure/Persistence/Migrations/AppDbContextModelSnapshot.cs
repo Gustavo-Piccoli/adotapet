@@ -103,6 +103,8 @@ namespace AdotaPet.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AdopterId", "CreatedAt");
+
                     b.HasIndex("AdopterId", "PetId")
                         .IsUnique()
                         .HasDatabaseName("IX_AdoptionRequests_AdopterId_PetId_Pending")
