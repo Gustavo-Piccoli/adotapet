@@ -48,6 +48,7 @@ public class RegisterShelterUseCaseTests
             Sut().ExecuteAsync(Dto(), CancellationToken.None));
 
         Assert.Equal("Já existe uma ONG com este CNPJ.", ex.Message);
+        Assert.Equal(ConflictCodes.CnpjTaken, ex.Code);
         Assert.Empty(_identity.Users);
         Assert.Single(_shelters.Items);
         Assert.Equal(0, _uow.SaveChangesCount);
@@ -62,5 +63,22 @@ public class RegisterShelterUseCaseTests
         Assert.Empty(_identity.Users);
         Assert.Empty(_shelters.Items);
         Assert.Equal(0, _uow.TransactionCount);
+    }
+
+    [Fact]
+    public async Task Register_WhenTransactionIsRetried_StillSucceedsWithASingleShelter()
+    {
+        _uow.SimulatedRetries = 1;
+        _uow.RollbackBeforeRetry = () =>
+        {
+            _identity.Users.Clear();
+            _shelters.Items.Clear();
+        };
+
+        var result = await Sut().ExecuteAsync(Dto(), CancellationToken.None);
+
+        var shelter = Assert.Single(_shelters.Items);
+        Assert.Equal(Assert.Single(_identity.Users).UserId, shelter.UserId);
+        Assert.Equal(shelter.Id, result.ProfileId);
     }
 }

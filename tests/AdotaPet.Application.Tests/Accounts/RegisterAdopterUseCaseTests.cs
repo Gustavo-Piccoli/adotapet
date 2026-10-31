@@ -44,4 +44,25 @@ public class RegisterAdopterUseCaseTests
 
         Assert.Empty(_identity.Users);
     }
+
+    [Fact]
+    public async Task Register_WhenTransactionIsRetried_StillSucceedsWithASingleAdopter()
+    {
+        _uow.SimulatedRetries = 1;
+        _uow.RollbackBeforeRetry = () =>
+        {
+            _identity.Users.Clear();
+            _adopters.Items.Clear();
+        };
+        var sut = new RegisterAdopterUseCase(_identity, new FakeTokenService(), _adopters, _uow, new FakeClock());
+
+        var result = await sut.ExecuteAsync(
+            new RegisterAdopterDto("maria@example.com", "Senha@123", "Maria Silva", "(51) 99999-1111",
+                "Porto Alegre", "RS"),
+            CancellationToken.None);
+
+        var adopter = Assert.Single(_adopters.Items);
+        Assert.Equal(Assert.Single(_identity.Users).UserId, adopter.UserId);
+        Assert.Equal(adopter.Id, result.ProfileId);
+    }
 }
