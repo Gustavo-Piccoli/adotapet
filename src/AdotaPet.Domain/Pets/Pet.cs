@@ -53,7 +53,7 @@ public sealed class Pet
     public void MarkAdopted(DateTimeOffset now)
     {
         if (Status == PetStatus.Adopted)
-            throw new ConflictException("Este pet já foi adotado.");
+            throw new ConflictException("Este pet já foi adotado.", ConflictCodes.PetAlreadyAdopted);
         Status = PetStatus.Adopted;
         UpdatedAt = now;
     }

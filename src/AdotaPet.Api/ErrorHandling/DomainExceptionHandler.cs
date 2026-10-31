@@ -34,12 +34,17 @@ public sealed class DomainExceptionHandler(IProblemDetailsService problemDetails
         else if (exception is BadHttpRequestException)
             logger.LogWarning(exception, "Bad HTTP request ({Status})", status);
 
+        var problem = new ProblemDetails { Status = status, Title = title, Detail = detail };
+        // Machine-readable reason for 409s (see ConflictCodes); the status alone is ambiguous.
+        if (exception is ConflictException conflict)
+            problem.Extensions["code"] = conflict.Code;
+
         httpContext.Response.StatusCode = status;
         return await problemDetails.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = httpContext,
             Exception = exception,
-            ProblemDetails = new ProblemDetails { Status = status, Title = title, Detail = detail },
+            ProblemDetails = problem,
         });
     }
 }

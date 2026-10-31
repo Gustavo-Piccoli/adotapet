@@ -15,20 +15,26 @@ public sealed class RegisterShelterUseCase(IIdentityService identity, ITokenServ
 {
     public async Task<AuthResultDto> ExecuteAsync(RegisterShelterDto dto, CancellationToken ct)
     {
-        // Create validates first, so invalid input never produces an Identity user.
-        var shelter = Shelter.Create(dto.Name, dto.Cnpj, dto.City, dto.State, dto.Phone, dto.Email,
-            dto.Description, clock.UtcNow);
+        var now = clock.UtcNow;
 
-        if (await shelters.CnpjExistsAsync(shelter.Cnpj, ct))
-            throw new ConflictException("Já existe uma ONG com este CNPJ.");
+        // Build once up front so invalid input never produces an Identity user...
+        var cnpj = Shelter.Create(dto.Name, dto.Cnpj, dto.City, dto.State, dto.Phone, dto.Email,
+            dto.Description, now).Cnpj;
 
-        var userId = await unitOfWork.ExecuteInTransactionAsync(async token =>
+        if (await shelters.CnpjExistsAsync(cnpj, ct))
+            throw new ConflictException("Já existe uma ONG com este CNPJ.", ConflictCodes.CnpjTaken);
+
+        // ...but create the entity inside the transaction: the execution strategy may re-run the action, and
+        // a reused entity would already have a user assigned.
+        var (userId, shelter) = await unitOfWork.ExecuteInTransactionAsync(async token =>
         {
+            var shelter = Shelter.Create(dto.Name, dto.Cnpj, dto.City, dto.State, dto.Phone, dto.Email,
+                dto.Description, now);
             var id = await identity.CreateUserAsync(dto.Email, dto.Password, Roles.Shelter, token);
             shelter.AssignUser(id);
             shelters.Add(shelter);
             await unitOfWork.SaveChangesAsync(token);
-            return id;
+            return (id, shelter);
         }, ct);
 
         var jwt = tokens.CreateToken(userId, shelter.Email, Roles.Shelter, shelter.Id, shelter.Name);

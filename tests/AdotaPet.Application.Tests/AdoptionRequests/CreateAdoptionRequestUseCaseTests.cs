@@ -38,6 +38,7 @@ public class CreateAdoptionRequestUseCaseTests
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
             Sut().ExecuteAsync(adopter.Id, pet.Id, "Quero muito adotar.", CancellationToken.None));
         Assert.Equal("Você já tem um pedido em análise para este pet.", ex.Message);
+        Assert.Equal(ConflictCodes.DuplicatePendingRequest, ex.Code);
     }
 
     [Fact]

@@ -29,7 +29,8 @@ public sealed class UnitOfWork(AppDbContext db) : IUnitOfWork
         return strategy.ExecuteAsync(async token =>
         {
             // Every attempt (including retries) must start from a clean tracker: entities from a failed
-            // attempt are stale. All callers load/create their entities inside the action, so this is safe.
+            // attempt are stale. Callers must therefore load/create their entities inside the action (never capture
+            // entities built outside it), so that a retry rebuilds them.
             db.ChangeTracker.Clear();
             await using var transaction = await db.Database.BeginTransactionAsync(token);
             try
@@ -54,13 +55,13 @@ public sealed class UnitOfWork(AppDbContext db) : IUnitOfWork
     private static ConflictException? Translate(DbUpdateException ex)
     {
         if (ex is DbUpdateConcurrencyException)
-            return new ConflictException("Este pedido já foi decidido por outra pessoa. Atualize a página.");
+            return new ConflictException("Este pedido já foi decidido por outra pessoa. Atualize a página.", ConflictCodes.ConcurrencyConflict);
 
         if (ex.GetBaseException() is SqlException { Number: UniqueIndexViolation or UniqueConstraintViolation } sql)
         {
             return sql.Message.Contains(AdoptionRequestConfiguration.PendingUniqueIndexName, StringComparison.Ordinal)
-                ? new ConflictException("Você já tem um pedido em análise para este pet.")
-                : new ConflictException("Registro duplicado.");
+                ? new ConflictException("Você já tem um pedido em análise para este pet.", ConflictCodes.DuplicatePendingRequest)
+                : new ConflictException("Registro duplicado.", ConflictCodes.DuplicateRecord);
         }
 
         return null;

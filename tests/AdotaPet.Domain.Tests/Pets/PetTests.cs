@@ -60,7 +60,8 @@ public class PetTests
         var pet = Create();
         pet.MarkAdopted(Now);
 
-        Assert.Throws<ConflictException>(() => pet.MarkAdopted(Now));
+        var ex = Assert.Throws<ConflictException>(() => pet.MarkAdopted(Now));
+        Assert.Equal(ConflictCodes.PetAlreadyAdopted, ex.Code);
     }
 
     [Fact]
