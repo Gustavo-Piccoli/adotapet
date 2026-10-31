@@ -1,11 +1,12 @@
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Your_strong_password123}
     ports:
-      - "1433:1433"
+      - "127.0.0.1:1433:1433"
     volumes:
       - sqldata:/var/opt/mssql
     healthcheck:
@@ -25,7 +26,7 @@ services:
       Jwt__SigningKey: ${JWT_SIGNING_KEY:-dev-only-signing-key-change-me-0123456789abcdef}
       Storage__PhotosPath: /data/photos
     ports:
-      - "5080:8080"
+      - "127.0.0.1:5080:8080"
     volumes:
       - photos:/data/photos
     depends_on:
@@ -36,7 +37,7 @@ services:
     build:
       context: web
     ports:
-      - "4200:80"
+      - "127.0.0.1:4200:80"
     depends_on:
       - api
 
