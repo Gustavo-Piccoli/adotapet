@@ -6,7 +6,7 @@ Single source of truth for pending work. Keep it updated here (see `CLAUDE.md`).
 
 Written and compiled, but not yet run because Docker is not installed on the development machine.
 
-- [ ] Run the API integration tests (`dotnet test tests/AdotaPet.Api.IntegrationTests`, 16 tests, need Docker/Testcontainers).
+- [ ] Run the API integration tests (`dotnet test tests/AdotaPet.Api.IntegrationTests`: 19 `[Fact]` tests counted by grep, no `[Theory]`; 16 need Docker/Testcontainers, the 3 in `ApiErrorMessagesTests` are pure unit tests).
 - [ ] Run `docker compose config` and `docker compose up --build` on a clean machine; confirm the site at `http://localhost:4200` and Scalar at `http://localhost:5080/scalar`.
 - [ ] Manual end-to-end check of all flows: visitor, adopter (request, duplicate request, my requests) and shelter (create/edit pet, photo upload, approve, reject).
 - [ ] Confirm the 413 "A foto deve ter no máximo 5 MB." path on real Kestrel/nginx. The integration tests use TestServer, which does not enforce `RequestSizeLimit`, so they only cover the 400 path.

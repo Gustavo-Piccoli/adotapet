@@ -35,6 +35,7 @@ Na primeira subida a API aplica as migrations e popula dados de demonstração (
 
 - **Só para demonstração:** o compose roda a API em `Development`, com seed de contas de senha conhecida (abaixo) e chaves padrão. Não use essa configuração em produção.
 - **Primeira subida demora cerca de 1 minuto:** a API aplica migrations e seed antes de escutar, e o compose só inicia o site (`web`) quando o healthcheck da API passa. Se o `docker compose up` ainda estiver em "waiting", é só aguardar.
+- **Atualizando de uma versão antiga:** a API agora roda sem root, e um volume `photos` criado por uma execução anterior pertence ao root. Rode `docker compose down -v` uma vez (apaga os dados) depois de atualizar.
 - **Senha do SA:** o volume `sqldata` guarda a senha do SA da primeira subida. Se mudar `SA_PASSWORD` depois, rode `docker compose down -v` (apaga os dados) para recomeçar.
 - **Apple Silicon:** a imagem do SQL Server é `linux/amd64`; no Docker Desktop ela roda via Rosetta/emulação (ative-a nas configurações).
 - As portas ficam presas ao loopback (`127.0.0.1`), então só a própria máquina acessa.
